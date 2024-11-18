@@ -1,0 +1,6 @@
+{
+    "exec": "python manage.py runserver",
+    "ext": "py",
+    "ignore": ["*.git", "node_modules"]
+  }
+  
