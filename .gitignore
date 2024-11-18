@@ -112,4 +112,5 @@ dmypy.json         # mypy 데몬 JSON 파일
 sssssssssssss/__pycache__/d.cpython-311.pyc
 
 server/venv
+server/.venv
 server/node_modules
