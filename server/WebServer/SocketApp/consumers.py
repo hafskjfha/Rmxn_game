@@ -1,6 +1,8 @@
 import json,redis
 from channels.generic.websocket import AsyncWebsocketConsumer
 
+redis_client = redis.StrictRedis(host="127.0.0.1", port=6379, db=0)
+
 class ChatConsumer(AsyncWebsocketConsumer):
     async def connect(self):
         self.room_name = self.scope['url_route']['kwargs']['room_name']

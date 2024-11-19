@@ -1,0 +1,9 @@
+{
+  "name": "dockers",
+  "version": "1.0.0",
+  "scripts": {
+    "start":"docker-compose up",
+    "stop":"docker-compose down"
+  },
+  "description": ""
+}
