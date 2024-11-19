@@ -1,8 +1,15 @@
 import React, { useEffect, useRef, useState } from 'react';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 interface ChatRoomProps {
   roomName: string;
 }
+const errork=(()=>{throw new Error('ws_uri is not in .env file')})
+
+const ws_uri = process.env.WS_URI || errork();
+
 
 const ChatRoom: React.FC<ChatRoomProps> = ({ roomName }) => {
   const [messages, setMessages] = useState<string[]>([]);
@@ -12,7 +19,7 @@ const ChatRoom: React.FC<ChatRoomProps> = ({ roomName }) => {
   const socketRef = useRef<WebSocket | null>(null);
 
   useEffect(() => {
-    const chatSocket = new WebSocket(`ws://127.0.0.1:8000/ws/chat/${roomName}/`);
+    const chatSocket = new WebSocket(`${ws_uri}/ws/chat/${roomName}/`);
     socketRef.current = chatSocket;
 
     chatSocket.onopen = () => {
