@@ -1,5 +1,3 @@
-# Byte-compiled / optimized / DLL files
-__pycache__/       # Python이 바이트코드로 컴파일한 파일들이 저장되는 디렉토리
 *.py[cod]          # .pyc, .pyo, .pyd 파일을 제외
 *$py.class         # Jython이 생성하는 클래스 파일
 *.pyc
@@ -54,63 +52,12 @@ cover/             # 커버리지 디렉토리
 *.mo               # 번역 파일
 *.pot              # 번역 템플릿 파일
 
-# Django stuff:
-*.log              # 로그 파일
-local_settings.py  # 로컬 설정 파일
-db.sqlite3         # SQLite 데이터베이스 파일
-db.sqlite3-journal # SQLite 저널 파일
 
-# Flask stuff:
-instance/          # Flask 인스턴스 디렉토리
-.webassets-cache   # Flask 웹 에셋 캐시 디렉토리
 
-# Scrapy stuff:
-.scrapy            # Scrapy 캐시 디렉토리
-
-# Sphinx documentation
-docs/_build/       # Sphinx 빌드 디렉토리
-
-# PyBuilder
-target/            # PyBuilder 타겟 디렉토리
-
-# Jupyter Notebook
-.ipynb_checkpoints # Jupyter 노트북 체크포인트 파일
-
-# IPython
-profile_default/   # 기본 IPython 프로필 디렉토리
-ipython_config.py  # IPython 구성 파일
-
-# Environments
-.env               # 가상 환경 디렉토리
-.venv              # 가상 환경 디렉토리
-env/               # 가상 환경 디렉토리
-venv/              # 가상 환경 디렉토리
-ENV/               # 가상 환경 디렉토리
-env.bak/           # 백업된 가상 환경 디렉토리
-venv.bak/          # 백업된 가상 환경 디렉토리
-
-# Spyder project settings
-.spyderproject     # Spyder 프로젝트 설정 파일
-.spyproject        # Spyder 프로젝트 설정 파일
-
-# Rope project settings
-.ropeproject       # Rope 프로젝트 설정 파일
-
-# mkdocs documentation
-/site              # mkdocs 사이트 빌드 디렉토리
-
-# mypy
-.mypy_cache/       # mypy 캐시 디렉토리
-.dmypy.json        # mypy 데몬 JSON 파일
-dmypy.json         # mypy 데몬 JSON 파일
-
-# Pyre type checker
-.pyre/             # Pyre 타입 검사기 디렉토리
-
-# pytype static type analyzer
-.pytype/           # pytype 정적 타입 분석기 디렉토리
-sssssssssssss/__pycache__/d.cpython-311.pyc
-
-server/venv
-server/node_modules
+venv
+.venv
+node_modules
+__pycache__
 .env
+logs
+*.log
