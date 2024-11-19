@@ -39,9 +39,11 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "SocketApp",
+    "corsheaders",
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -134,3 +136,9 @@ CHANNEL_LAYERS = {
         },
     },
 }
+
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",  # React의 주소
+    "https://ominous-space-winner-x55xg5rp4x553v5w5-3000.app.github.dev",
+    "https://ominous-space-winner-x55xg5rp4x553v5w5-8000.app.github.dev",
+]

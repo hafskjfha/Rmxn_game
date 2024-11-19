@@ -111,6 +111,7 @@ dmypy.json         # mypy 데몬 JSON 파일
 .pytype/           # pytype 정적 타입 분석기 디렉토리
 sssssssssssss/__pycache__/d.cpython-311.pyc
 
+server/.venv
 server/venv
 server/.venv
 server/node_modules
