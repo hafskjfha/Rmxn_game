@@ -1,7 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import dotenv from 'dotenv';
 
-dotenv.config();
 
 interface ChatRoomProps {
   roomName: string;

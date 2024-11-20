@@ -1,4 +1,4 @@
-version: '3'
+version: '3.4' # Swarm이 아닌 기본 모드에서도 지원
 services:
   db:
     image: postgres:latest
@@ -10,6 +10,8 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    mem_limit: 512M # 메모리 제한
+    cpus: "0.3"    # CPU 30% 제한
 volumes:
   postgres_data:
     driver: local
