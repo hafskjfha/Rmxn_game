@@ -1,0 +1,18 @@
+.lobby-container {
+    display: flex;
+    height: 100vh; /* 화면 전체 높이를 차지 */
+  }
+  
+  .users-section {
+    flex: 1; /* 1:9 비율에서 1 */
+    background-color: #f0f0f0; /* 임시 배경색 */
+    padding: 20px;
+    border-right: 1px solid #ccc;
+  }
+  
+  .rooms-section {
+    flex: 9; /* 1:9 비율에서 9 */
+    background-color: #ffffff; /* 임시 배경색 */
+    padding: 20px;
+  }
+  
