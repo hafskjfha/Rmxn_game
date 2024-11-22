@@ -8,6 +8,8 @@ services:
     volumes:
       - redis-data:/data
     restart: always
+    mem_limit: 256M # 메모리 제한
+    cpus: "0.3"    # CPU 30% 제한
 
 volumes:
   redis-data:
