@@ -4,10 +4,15 @@ from DBapp.models import Product
 
 logger = logging.getLogger('common')
 
+__all__ = ['Game','ComHandler']
+current_dir = os.path.dirname(__file__)
+
 class Game:
     def __init__(self) -> None:
-        with open('','r',encoding='utf-8') as f:
-            self.com_word_db = f.read().split()
+        start_letter_file = os.path.join(current_dir, '../Data/start_letters.txt')
+        with open(start_letter_file,'r',encoding='utf-8') as f:
+            self.start_letters = f.read().split()
+        logger.info('Game class init')
     
     def check_word_in_db(self,cword:str)->str:
         """
@@ -51,6 +56,11 @@ class Game:
             logger.error(f'unexcept error: word:{word} error name:{e}')
             return '5x'
     
+    
+class ComHandler:
+    def __init__(self) -> None:
+        with open("",'r',encoding='utf-8') as f:
+            self.com_word_db = f.read().split()
     
 
 
