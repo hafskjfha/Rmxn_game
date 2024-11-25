@@ -3,6 +3,7 @@
     "npm": "^10.9.0"
   },
   "scripts":{
-    "start": "cd WebServer && python manage.py runserver"
+    "start": "cd WebServer && python manage.py runserver",
+    "mag":"cd WebServer && python manage.py makemigrations && python manage.py migrate"
   }
 }

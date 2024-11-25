@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
 
 
+
 const errork=(()=>{throw new Error('ws_uri is not in .env file')})
 
 const ws_uri = process.env.REACT_APP_WS_URI || errork();

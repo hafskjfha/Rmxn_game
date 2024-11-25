@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "SocketApp",
     "corsheaders",
+    "DBapp",
 ]
 
 MIDDLEWARE = [
@@ -82,8 +83,13 @@ WSGI_APPLICATION = "WebServer.wsgi.application"
 
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": f"{os.getenv('POSTGRES_DB')}",
+        'USER': f'{os.getenv('POSTGRES_USER')}',        # 데이터베이스 사용자 이름
+        'PASSWORD': f'{os.getenv('POSTGRES_PASSWORD')}',         # 데이터베이스 비밀번호
+        'HOST': 'localhost',                 # PostgreSQL이 실행 중인 호스트
+        'PORT': '5432',   
+
     }
 }
 
@@ -145,3 +151,44 @@ CORS_ALLOWED_ORIGINS = [
     "https://ominous-space-winner-x55xg5rp4x553v5w5-3000.app.github.dev",
     "https://ominous-space-winner-x55xg5rp4x553v5w5-8000.app.github.dev",
 ]
+
+# settings.py
+
+# settings.py
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+
+    'handlers': {
+        'info_file': {  # INFO 로그를 기록하는 핸들러
+            'level': 'INFO',
+            'class': 'logging.FileHandler',
+            'filename': 'log/info.log',  # 로그 파일 경로
+            'encoding': 'utf-8',
+        },
+        'error_file': {  # WARNING 이상 로그를 기록하는 핸들러
+            'level': 'WARNING',  # WARNING 이상 로그를 기록
+            'class': 'logging.FileHandler',
+            'filename': 'log/error.log',  # 로그 파일 경로
+            'encoding': 'utf-8',
+        },
+        'console': {  # 콘솔 출력 핸들러 (선택 사항)
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console', 'info_file', 'error_file'],  # 로그를 콘솔과 파일에 기록
+            'level': 'INFO',
+            'propagate': True,
+        },
+        'common': {
+            'handlers': ['console', 'info_file', 'error_file'],  # 로그를 콘솔과 파일에 기록
+            'level': 'INFO',
+            'propagate': False,
+        },
+        
+    },
+}
