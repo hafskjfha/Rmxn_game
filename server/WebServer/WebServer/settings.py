@@ -141,7 +141,7 @@ CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
         "CONFIG": {
-            "hosts": [("127.0.0.1", 6379)],
+            "hosts": [f"{os.getenv('redis_setting')}"],  # 비밀번호 포함 URL
         },
     },
 }
