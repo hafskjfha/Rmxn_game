@@ -106,7 +106,7 @@ class GameLobbyConsumer(AsyncWebsocketConsumer):
                              'type': 'room_create',
                              'name': commend['name'] ,
                              'number': commend['number'],
-                            'setting': commend['setting']
+                             'setting': commend['setting']
                         }
                     )
                 elif commend=="room_delete":
