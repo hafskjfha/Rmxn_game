@@ -17,9 +17,7 @@ Including another URLconf
 
 from django.contrib import admin
 from django.urls import path
-from SocketApp.views import change_setting
 
 urlpatterns = [
-    path("admin/", admin.site.urls),
-    path("change_setting",change_setting,name="change_setting")
+    path("admin/", admin.site.urls),   
 ]

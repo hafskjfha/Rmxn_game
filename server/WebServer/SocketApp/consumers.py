@@ -1,6 +1,8 @@
 import json,redis,logging,traceback
 from channels.generic.websocket import AsyncWebsocketConsumer
 from urllib.parse import parse_qs
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
 
 logger = logging.getLogger('common')
 
@@ -56,6 +58,41 @@ class GameRoomConsumer(AsyncWebsocketConsumer):
         )
 
         await self.accept()
+    async def disconnect(self, code):
+        await self.channel_layer.group_discard(
+            self.room_group_name,
+            self.channel_name
+        )
+    async def receive(self, text_data=None, bytes_data=None):
+        try:
+            data:dict[str,str] = json.loads(text_data)
+            commend = data.get('commend','')
+            if commend=="setting_change":
+                self.room_setting_change(data)
+                return
+            #elif ~~
+
+        except Exception as e:
+            errorm= str(e)
+            formatted_tb = traceback.format_tb(e.__traceback__)
+            for l in formatted_tb:
+                e+=l+'\n'
+            logger.error(errorm)
+            await self.send('server error')
+        
+    
+    async def room_setting_change(self,setting:dict[str,str]):
+        channel_layer = get_channel_layer()
+        async_to_sync(channel_layer.group_send)(
+            'lobby',  
+            {
+                'type': 'room_setting_change',  
+                'number': setting['number'],
+                'name':setting['name'],
+                'setting':setting['setting']
+            }
+        )
+
 
 
 class GameLobbyConsumer(AsyncWebsocketConsumer):
@@ -136,7 +173,7 @@ class GameLobbyConsumer(AsyncWebsocketConsumer):
             for l in formatted_tb:
                 e+=l+'\n'
             logger.error(errorm)
-            self.send('server error')
+            await self.send('server error')
 
     async def room_create(self,e):
         room_name = e['name']
@@ -161,4 +198,13 @@ class GameLobbyConsumer(AsyncWebsocketConsumer):
         }))
 
     async def room_setting_change(self,e):
-        pass
+        room_name=e['naame']
+        room_number=e['number']
+        room_setting=e['setting']
+
+        await self.send(json.dumps({
+            'message_type':'room_setting_change',
+            'room_name': room_name,
+            'room_number':room_number,
+            'room_setting':room_setting
+        }))
