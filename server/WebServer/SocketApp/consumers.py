@@ -94,7 +94,7 @@ class GameRoomConsumer(AsyncWebsocketConsumer):
         )
 
 
-
+rid=1
 class GameLobbyConsumer(AsyncWebsocketConsumer):
     async def connect(self):
         try:
@@ -127,12 +127,12 @@ class GameLobbyConsumer(AsyncWebsocketConsumer):
 
     async def receive(self, text_data=None):
         try:
+            global rid
             data:dict[str,str] = json.loads(text_data)
             commend:str = data.get('commend','')
-            print(data)
             if commend:
                 if commend=="room_create":
-                    if 'name' not in data or 'number' not in data or 'setting' not in data:
+                    if 'name' not in data or 'setting' not in data:
                         await self.send(text_data=json.dumps({
                             'error': 'Commend is required.'
                         }))
@@ -141,12 +141,13 @@ class GameLobbyConsumer(AsyncWebsocketConsumer):
                     await self.channel_layer.group_send(
                     'lobby',
                         {
-                             'type': 'room_create',
-                             'name': data['name'] ,
-                             'number': data['number'],
+                            'type': 'room_create',
+                            'name': data['name'] ,
+                            'number': rid,
                             'setting': data['setting']
                         }
                     )
+                    rid+=1
                 elif commend=="room_delete":
                     if 'name' not in data or 'number' not in data or 'setting' not in data:
                         await self.send(text_data=json.dumps({
@@ -156,9 +157,9 @@ class GameLobbyConsumer(AsyncWebsocketConsumer):
                     await self.channel_layer.group_send(
                     'lobby',
                         {
-                             'type': 'room_delete',
-                             'name': data['name'] ,
-                             'number': data['number'],
+                            'type': 'room_delete',
+                            'name': data['name'] ,
+                            'number': data['number'],
                         }
                     )
                 elif commend=="chat":
@@ -171,9 +172,9 @@ class GameLobbyConsumer(AsyncWebsocketConsumer):
                         await self.channel_layer.group_send(
                     'lobby',
                         {
-                             'type': 'chat',
-                             'name': data['name'] ,
-                             'message': data['message'],
+                            'type': 'chat',
+                            'name': data['name'] ,
+                            'message': data['message'],
                         }
                     )
 
@@ -205,7 +206,7 @@ class GameLobbyConsumer(AsyncWebsocketConsumer):
 
     async def room_delete(self,e):
         room_name = e['name']
-        room_number = e['room_number']
+        room_number = e['number']
 
         await self.send(json.dumps({
             'message_type':'room_delete',
@@ -224,3 +225,14 @@ class GameLobbyConsumer(AsyncWebsocketConsumer):
             'room_number':room_number,
             'room_setting':room_setting
         }))
+
+    async def chat(self,e):
+        name=e['name']
+        message=e['message']
+        await self.send(json.dumps({
+            'message_type':'chat',
+            'name': name,
+            'message':message,
+        }))
+
+

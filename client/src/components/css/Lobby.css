@@ -1,72 +1,75 @@
 .lobby-container {
     display: flex;
-    height: 100vh;
-    /* 화면 전체 높이를 차지 */
-}
-
-.users-section {
-    flex: 1;
-    /* 1:9 비율에서 1 */
-    background-color: #f0f0f0;
-    /* 임시 배경색 */
-    padding: 20px;
-    border-right: 1px solid #ccc;
-}
-
-.rooms-section {
-    flex: 9;
-    /* 1:9 비율에서 9 */
-    background-color: #ffffff;
-    /* 임시 배경색 */
-    padding: 20px;
-}
-.chat-container {
-    margin-top: 20px;
-    border-top: 1px solid #ccc;
-    padding-top: 10px;
-    height: 33%;
-    /* 화면의 1/3 높이 */
+    height: 100vh; /* 화면 전체 높이를 차지 */
+    flex-direction: row;
+    overflow: hidden; /* 자식 요소가 벗어나지 않도록 설정 */
+  }
+  
+  .rooms-section {
+    flex: 9; /* 1:9 비율에서 9 */
     display: flex;
     flex-direction: column;
-}
-
-.chat-messages {
-    flex: 1;
-    /* 남은 공간을 모두 차지 */
-    overflow-y: auto;
-    background-color: #f9f9f9;
-    padding: 10px;
+    background-color: #ffffff;
+    padding: 20px;
+    overflow: hidden; /* 방 목록 및 채팅이 넘치지 않도록 설정 */
+  }
+  
+  .rooms-list {
+    flex: 3; /* 방 목록이 차지하는 비율 */
+    overflow-y: auto; /* 스크롤 활성화 */
+    margin-bottom: 10px;
     border: 1px solid #ccc;
     border-radius: 5px;
-    margin-bottom: 10px;
-}
-
-.chat-message {
+    padding: 10px;
+  }
+  
+  .chat-container {
+    flex: none; /* 고정 크기 */
+    height: 25%; /* 채팅 영역의 고정 높이 (화면 비율로 조정 가능) */
+    display: flex;
+    flex-direction: column;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background-color: #f9f9f9;
+  }
+  
+  .chat-messages {
+    flex: 1; /* 메시지가 나올 공간 */
+    overflow-y: auto; /* 스크롤 활성화 */
+    padding: 10px;
+  }
+  
+  .chat-message {
     margin-bottom: 5px;
     color: #333;
-}
-
-.chat-input {
+    word-wrap: break-word; /* 긴 단어가 영역을 넘지 않도록 처리 */
+  }
+  
+  .chat-input {
     display: flex;
     gap: 10px;
-}
-
-.chat-input input {
+    padding: 10px;
+    border-top: 1px solid #ccc;
+    background-color: #fff;
+  }
+  
+  .chat-input input {
     flex: 1;
     padding: 10px;
     border: 1px solid #ccc;
     border-radius: 5px;
-}
-
-.chat-input button {
+  }
+  
+  .chat-input button {
     padding: 10px 20px;
     background-color: #007bff;
     color: #fff;
     border: none;
     border-radius: 5px;
     cursor: pointer;
-}
-
-.chat-input button:hover {
+  }
+  
+  .chat-input button:hover {
     background-color: #0056b3;
-}
+  }
+  
