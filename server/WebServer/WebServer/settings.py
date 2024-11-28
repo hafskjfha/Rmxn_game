@@ -85,11 +85,10 @@ DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
         "NAME": f"{os.getenv('POSTGRES_DB')}",
-        'USER': f'{os.getenv('POSTGRES_USER')}',        # 데이터베이스 사용자 이름
-        'PASSWORD': f'{os.getenv('POSTGRES_PASSWORD')}',         # 데이터베이스 비밀번호
-        'HOST': 'localhost',                 # PostgreSQL이 실행 중인 호스트
+        'USER': f"{os.getenv('POSTGRES_USER')}",        # 데이터베이스 사용자 이름
+        'PASSWORD': f"{os.getenv('POSTGRES_PASSWORD')}",         # 데이터베이스 비밀번호
+        'HOST': f"{os.getenv('POSTGRES_HOST')}",                 # PostgreSQL이 실행 중인 호스트
         'PORT': '5432',   
-
     }
 }
 
