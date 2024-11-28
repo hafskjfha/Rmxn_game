@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
 import "./css/Lobby.css";
-import "./css/RoomCard.css";
 import { useNavigate } from "react-router-dom";
 import Modal from "./Modal";
 
@@ -20,18 +19,25 @@ const RoomCard: React.FC<RoomCardProps> = ({ roomNumber, roomName, gameSettings,
 
   return (
     <div
-      className={`room-card ${isPlaying ? "playing" : "not-playing"}`}
-      onClick={handleClick}
-      style={{ cursor: "pointer" }}
-    >
-      <div className="room-header">
-        <span className="room-number">방 #{roomNumber}</span>
-        <span className="room-name">{roomName}</span>
-      </div>
-      <div className="room-footer">
-        <span className="game-settings">{gameSettings}</span>
-      </div>
-    </div>
+  className={`room-card p-4 border rounded shadow ${
+    isPlaying ? "bg-gray-200" : "bg-white"
+  }`}
+  onClick={handleClick}
+  style={{ cursor: "pointer" }}
+>
+  <div className="room-header flex justify-between items-center">
+    <span className="room-number text-sm font-semibold text-gray-500">
+      방 #{roomNumber}
+    </span>
+    <span className="room-name text-lg font-bold text-gray-700">
+      {roomName}
+    </span>
+  </div>
+  <div className="room-footer mt-2">
+    <span className="game-settings text-sm text-gray-500">{gameSettings}</span>
+  </div>
+</div>
+
   );
 };
 
@@ -133,126 +139,161 @@ const Lobby: React.FC = () => {
   }, [messages]);
 
   return (
-    <div className="lobby-container">
-      <aside className="users-section">
-        <h2>접속 중인 유저</h2>
-      </aside>
+    <div className="lobby-container flex h-screen">
+      {/* 접속 중인 유저 섹션 */}
+  <aside className="users-section w-1/5 p-4 bg-gray-100 border-r border-gray-300">
+    <h2 className="text-xl font-bold mb-4">접속 중인 유저</h2>
+    {/* 유저 목록은 여기에 */}
+  </aside>
 
-      <main className="rooms-section">
-        <h2>방 목록</h2>
-        <div className="rooms-list">
-          {rooms.map((room) => (
-            <RoomCard
-              key={room.id}
-              roomNumber={room.id}
-              roomName={room.name}
-              gameSettings={room.settings}
-              isPlaying={room.isPlaying}
-            />
-          ))}
-        </div>
+  {/* 메인 섹션 */}
+  <main className="rooms-section flex-1 flex flex-col p-4">
+    {/* 방 목록 헤더 */}
+    <div className="flex justify-between items-center mb-4">
+      <h2 className="text-2xl font-bold">방 목록</h2>
+      <div className="flex gap-4">
+        <button
+          onClick={() => setShowCreateRoomModal(true)}
+          className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition"
+        >
+          방 만들기
+        </button>
+        <button
+          onClick={() => setShowDictionaryModal(true)}
+          className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition"
+        >
+          사전
+        </button>
+      </div>
+    </div>
 
-        <div className="buttons-section">
-          <button onClick={() => setShowCreateRoomModal(true)}>방 만들기</button>
-          <button onClick={() => setShowDictionaryModal(true)}>사전</button>
-        </div>
+    {/* 방 목록 */}
+    <div className="flex-1 overflow-auto">
+      <div className="rooms-list grid grid-cols-2 gap-4">
+        {rooms.map((room) => (
+          <RoomCard
+            key={room.id}
+            roomNumber={room.id}
+            roomName={room.name}
+            gameSettings={room.settings}
+            isPlaying={room.isPlaying}
+          />
+        ))}
+      </div>
+    </div>
 
-        <div className="chat-container">
-          <div className="chat-messages">
-            {messages.map((msg, index) => (
-              <div key={index} className="chat-message">
-                <strong>{msg.nickname}</strong>: {msg.message}
-              </div>
-            ))}
-            <div ref={messagesEndRef}></div>
+    {/* 채팅 섹션 */}
+    <div className="chat-container h-1/4 mt-4 border-t border-gray-300 flex flex-col">
+      <div className="chat-messages overflow-y-auto h-full p-2 bg-white border border-gray-300 rounded">
+        {messages.map((msg, index) => (
+          <div key={index} className="chat-message">
+            <strong>{msg.nickname}</strong>: {msg.message}
           </div>
-          <div className="chat-input">
-            <input
-              type="text"
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && sendMessage()}
-              placeholder="메시지를 입력하세요..."
-            />
-            <button onClick={sendMessage}>전송</button>
-          </div>
-        </div>
-      </main>
+        ))}
+      </div>
+      <div className="chat-input flex mt-2">
+        <input
+          type="text"
+          value={message}
+          onChange={(e) => setMessage(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && sendMessage()}
+          placeholder="메시지를 입력하세요..."
+          className="flex-1 p-2 border border-gray-300 rounded-l focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+        <button
+          onClick={sendMessage}
+          className="px-4 bg-blue-500 text-white rounded-r hover:bg-blue-600"
+        >
+          전송
+        </button>
+      </div>
+    </div>
+  </main>
 
-      {/* Modals */}
+      {/* 방 만들기 모달 */}
       {showCreateRoomModal && (
         <Modal onClose={() => setShowCreateRoomModal(false)}>
-          <h2>방 만들기</h2>
-          <div className="form-group">
-            <label htmlFor="room-title">방 제목</label>
+          <h2 className="text-xl font-bold mb-4">방 만들기</h2>
+          <div className="mb-4">
+            <label htmlFor="room-title" className="block text-sm font-medium">
+              방 제목
+            </label>
             <input
               id="room-title"
               type="text"
               placeholder="방 제목 입력"
               value={roomTitle}
               onChange={(e) => setRoomTitle(e.target.value)}
+              className="w-full p-2 border rounded-md"
             />
           </div>
-          <div className="form-group">
-            <label>설정</label>
-            <div>
-              <label>
-                <input
-                  type="checkbox"
-                  checked={useOneWord}
-                  onChange={(e) => setUseOneWord(e.target.checked)}
-                />
-                한방 단어 허용
-              </label>
-            </div>
-            <div>
-              <span>처음 시간 설정:</span>
-              <label>
+          <div className="mb-4">
+            <label className="block text-sm font-medium">설정</label>
+            <label className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                checked={useOneWord}
+                onChange={(e) => setUseOneWord(e.target.checked)}
+                className="form-checkbox"
+              />
+              <span>한방 단어 허용</span>
+            </label>
+            <div className="mt-2 space-x-4">
+              <label className="flex items-center space-x-2">
                 <input
                   type="radio"
                   name="initial-time"
                   value="60"
                   checked={initialTime === "60"}
                   onChange={(e) => setInitialTime(e.target.value)}
+                  className="form-radio"
                 />
-                60초
+                <span>60초</span>
               </label>
-              <label>
+              <label className="flex items-center space-x-2">
                 <input
                   type="radio"
                   name="initial-time"
                   value="30"
                   checked={initialTime === "30"}
                   onChange={(e) => setInitialTime(e.target.value)}
+                  className="form-radio"
                 />
-                30초
+                <span>30초</span>
               </label>
-              <label>
+              <label className="flex items-center space-x-2">
                 <input
                   type="radio"
                   name="initial-time"
                   value="10"
                   checked={initialTime === "10"}
                   onChange={(e) => setInitialTime(e.target.value)}
+                  className="form-radio"
                 />
-                10초
+                <span>10초</span>
               </label>
             </div>
           </div>
           <button
             onClick={handleCreateRoom}
             disabled={!roomTitle.trim()}
+            className="w-full px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition"
           >
             확인
           </button>
         </Modal>
       )}
 
+      {/* 사전 모달 */}
       {showDictionaryModal && (
         <Modal onClose={() => setShowDictionaryModal(false)}>
-          <h2>사전</h2>
-          <input type="text" placeholder="단어 입력" />
-          <div>결과: </div>
+          <h2 className="text-xl font-bold mb-4">사전</h2>
+          <input
+            type="text"
+            placeholder="단어 입력"
+            className="w-full p-2 border rounded-md"
+          />
+          <div className="mt-2">결과: </div>
         </Modal>
       )}
     </div>

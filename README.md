@@ -19,12 +19,13 @@
     
 - **Frontend**: <br>
     <img src="https://img.shields.io/badge/react-%2320232a.svg?style=flat-square&logo=react&logoColor=%2361DAFB">
-    <img src="https://img.shields.io/badge/css3-%231572B6.svg?style=flat-square&logo=css3&logoColor=white">
+    <img src="https://img.shields.io/badge/Tailwind CSS-06B6D4?style=flat-square&logo=Tailwind CSS&logoColor=white"/>
+
 
 - **Backend**:<br>
     <img src="https://img.shields.io/badge/django-%23092E20.svg?style=flat-square&logo=django&logoColor=white"/>
     <img src="https://img.shields.io/badge/channels-%23092E20.svg?style=flat-square"/>
-    <img src="https://img.shields.io/badge/sebsocket-%23092E20.svg?style=flat-square"/>
+    <img src="https://img.shields.io/badge/websocket-%23092E20.svg?style=flat-square"/>
 
 - **Database**: <br>
     <img src="https://img.shields.io/badge/postgres-%23316192.svg?style=flat-square&logo=postgresql&logoColor=white">

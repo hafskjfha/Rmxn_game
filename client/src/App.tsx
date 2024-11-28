@@ -64,7 +64,7 @@ const Home: React.FC = () => {
   const [isNicknameValid, setIsNicknameValid] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [isLobbyButtonEnabled, setIsLobbyButtonEnabled] = useState<boolean>(false);
-  const navigate = useNavigate()
+  const navigate = useNavigate();
 
   useEffect(() => {
     const storedNickname = localStorage.getItem('nickname');
@@ -77,25 +77,13 @@ const Home: React.FC = () => {
   const handleNicknameSubmit = async () => {
     try {
       setErrorMessage('');
-      //const response = await axios.post('/api/guest', { nickname });
-      const response={status:201}
+      const response = { status: 201 };
       if (response.status === 201) {
         localStorage.setItem('nickname', nickname);
         setIsLobbyButtonEnabled(true);
       }
     } catch (error: any) {
-      if (error.response) {
-        const { status, data } = error.response;
-        if (status === 409) {
-          setErrorMessage('중복된 닉네임입니다.');
-        } else if (status === 400) {
-          setErrorMessage('부적절한 닉네임입니다.');
-        } else {
-          setErrorMessage('서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
-        }
-      } else {
-        setErrorMessage('네트워크 오류가 발생했습니다.');
-      }
+      setErrorMessage('서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
     }
   };
 
@@ -105,54 +93,60 @@ const Home: React.FC = () => {
     setIsNicknameValid(value.length >= 3 && value.length <= 20);
   };
 
-  const handleLogout = async () => {
-    try {
-      // 서버에 닉네임 삭제 요청
-      //await axios.delete('/api/guest', { data: { nickname } });
-      // 로컬스토리지에서 닉네임 삭제
-      localStorage.removeItem('nickname');
-      setNickname('');
-      setIsLobbyButtonEnabled(false);
-    } catch (error: any) {
-      setErrorMessage('로그아웃 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
-    }
+  const handleLogout = () => {
+    localStorage.removeItem('nickname');
+    setNickname('');
+    setIsLobbyButtonEnabled(false);
   };
 
   return (
-    <div>
-      <h1>🌟 HOME 🌟</h1>
-      <h2>welcome 그투!</h2>
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-indigo-500 to-purple-500 text-white">
+      <h1 className="text-4xl font-bold mb-4">🌟 HOME 🌟</h1>
+      <h2 className="text-xl mb-8">Welcome, 그투!</h2>
       {!isLobbyButtonEnabled ? (
-        <div className="container">
+        <div className="flex flex-col items-center space-y-4">
           <input
             type="text"
             value={nickname}
             onChange={handleNicknameChange}
             placeholder="닉네임을 입력하세요"
+            className="w-64 p-3 text-white bg-transparent border border-white rounded-md text-center placeholder-white focus:outline-none focus:ring-2 focus:ring-yellow-400"
           />
-          <button onClick={handleNicknameSubmit} disabled={!isNicknameValid}>
+          <button
+            onClick={handleNicknameSubmit}
+            disabled={!isNicknameValid}
+            className={`w-64 py-2 px-4 rounded-md text-lg ${
+              isNicknameValid
+                ? 'bg-green-500 hover:bg-green-600 transition-all'
+                : 'bg-gray-500 cursor-not-allowed'
+            }`}
+          >
             닉네임 설정
           </button>
-          {errorMessage && <p className="error-message">{errorMessage}</p>}
+          {errorMessage && <p className="text-red-300">{errorMessage}</p>}
         </div>
       ) : (
-        <div className="container">
-          <p className="nickname-display">안녕하세요, {nickname}님!</p>
+        <div className="flex flex-col items-center space-y-4">
+          <p className="text-2xl">안녕하세요, {nickname}님!</p>
           <button
-            className="lobby-button"
             onClick={() => navigate('/lobby')}
+            className="w-64 py-2 px-4 rounded-md bg-blue-500 hover:bg-blue-600 text-lg transition-all"
           >
             로비 입장
           </button>
-          <button className="logout-button" onClick={handleLogout}>
+          <button
+            onClick={handleLogout}
+            className="w-64 py-2 px-4 rounded-md bg-red-500 hover:bg-red-600 text-lg transition-all"
+          >
             로그아웃
           </button>
         </div>
-        
       )}
     </div>
   );
 };
+
+
 const router = createBrowserRouter(
   [
     { path: "/", element: <Home /> },
