@@ -71,7 +71,7 @@ const Lobby: React.FC = () => {
       navigate("/");
     }
     const ws = new WebSocket(
-      `ws://127.0.0.1:8000/ws/lobby/?nickname=${encodeURIComponent(nickname)}`
+      `${process.env.REACT_APP_WS_URI}/ws/lobby/?nickname=${encodeURIComponent(nickname)}`
     );
     setSocket(ws);
 
@@ -92,16 +92,22 @@ const Lobby: React.FC = () => {
 
       if (data.message_type === "room_create" && data.room_name && data.room_number && data.room_setting) {
         // Add the new room to the list
+        console.log(data.room_number)
         setRooms((prev) => [
-          ...prev,
           {
             id: data.room_number,
             name: data.room_name,
             settings: data.room_setting,
             isPlaying: false,
           },
+          ...prev,
         ]);
       }
+      if (data.message_type === "room_delete" && data.room_number) {
+        // Remove the room with the specified room_number from the list
+        setRooms((prev) => prev.filter((room) => room.id !== data.room_number));
+      }
+
     };
 
     ws.onclose = () => {
@@ -120,6 +126,13 @@ const Lobby: React.FC = () => {
       setMessage("");
     }
   };
+
+  const test = () =>{
+    if (socket){
+      console.log(rooms)
+      socket.send(JSON.stringify({ commend: "room_delete", number:1, name:"ㅇㅁㅇ" }));
+    }
+  }
 
   const handleCreateRoom = () => {
     if (socket) {
@@ -141,9 +154,10 @@ const Lobby: React.FC = () => {
   return (
     <div className="lobby-container flex h-screen">
       {/* 접속 중인 유저 섹션 */}
-  <aside className="users-section w-1/5 p-4 bg-gray-100 border-r border-gray-300">
+  <aside className="users-section w-1/8 p-4 bg-gray-100 border-r border-gray-300">
     <h2 className="text-xl font-bold mb-4">접속 중인 유저</h2>
     {/* 유저 목록은 여기에 */}
+    <button className="mt-2" onClick={test}>zz</button>
   </aside>
 
   {/* 메인 섹션 */}
@@ -190,6 +204,7 @@ const Lobby: React.FC = () => {
             <strong>{msg.nickname}</strong>: {msg.message}
           </div>
         ))}
+        <div ref={messagesEndRef}></div>
       </div>
       <div className="chat-input flex mt-2">
         <input
@@ -238,41 +253,42 @@ const Lobby: React.FC = () => {
               />
               <span>한방 단어 허용</span>
             </label>
-            <div className="mt-2 space-x-4">
-              <label className="flex items-center space-x-2">
-                <input
-                  type="radio"
-                  name="initial-time"
-                  value="60"
-                  checked={initialTime === "60"}
-                  onChange={(e) => setInitialTime(e.target.value)}
-                  className="form-radio"
-                />
-                <span>60초</span>
-              </label>
-              <label className="flex items-center space-x-2">
-                <input
-                  type="radio"
-                  name="initial-time"
-                  value="30"
-                  checked={initialTime === "30"}
-                  onChange={(e) => setInitialTime(e.target.value)}
-                  className="form-radio"
-                />
-                <span>30초</span>
-              </label>
-              <label className="flex items-center space-x-2">
-                <input
-                  type="radio"
-                  name="initial-time"
-                  value="10"
-                  checked={initialTime === "10"}
-                  onChange={(e) => setInitialTime(e.target.value)}
-                  className="form-radio"
-                />
-                <span>10초</span>
-              </label>
-            </div>
+            <div className="mt-2 flex flex-wrap gap-4">
+  <label className="flex items-center space-x-2">
+    <input
+      type="radio"
+      name="initial-time"
+      value="60"
+      checked={initialTime === "60"}
+      onChange={(e) => setInitialTime(e.target.value)}
+      className="form-radio"
+    />
+    <span>60초</span>
+  </label>
+  <label className="flex items-center space-x-2">
+    <input
+      type="radio"
+      name="initial-time"
+      value="30"
+      checked={initialTime === "30"}
+      onChange={(e) => setInitialTime(e.target.value)}
+      className="form-radio"
+    />
+    <span>30초</span>
+  </label>
+  <label className="flex items-center space-x-2">
+    <input
+      type="radio"
+      name="initial-time"
+      value="10"
+      checked={initialTime === "10"}
+      onChange={(e) => setInitialTime(e.target.value)}
+      className="form-radio"
+    />
+    <span>10초</span>
+  </label>
+</div>
+
           </div>
           <button
             onClick={handleCreateRoom}

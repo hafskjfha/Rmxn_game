@@ -76,7 +76,7 @@ class GameRoomConsumer(AsyncWebsocketConsumer):
             errorm= str(e)
             formatted_tb = traceback.format_tb(e.__traceback__)
             for l in formatted_tb:
-                e+=l+'\n'
+                e+=str(l)+'\n'
             logger.error(errorm)
             await self.send('server error')
         
@@ -115,7 +115,7 @@ class GameLobbyConsumer(AsyncWebsocketConsumer):
             errorm= str(e)
             formatted_tb = traceback.format_tb(e.__traceback__)
             for l in formatted_tb:
-                e+=l+'\n'
+                e+=str(l)+'\n'
             logger.error(errorm)
             await self.close(1006,reason='server error')
         
@@ -137,7 +137,12 @@ class GameLobbyConsumer(AsyncWebsocketConsumer):
                             'error': 'Commend is required.'
                         }))
                         return
-                    
+                    await self.send(text_data=json.dumps({
+                            'type': 'room_create_me',
+                            'number': rid,
+                            'setting': data['setting'],
+                            'name': data['name'] ,
+                        }))
                     await self.channel_layer.group_send(
                     'lobby',
                         {
@@ -149,7 +154,7 @@ class GameLobbyConsumer(AsyncWebsocketConsumer):
                     )
                     rid+=1
                 elif commend=="room_delete":
-                    if 'name' not in data or 'number' not in data or 'setting' not in data:
+                    if 'name' not in data or 'number' not in data:
                         await self.send(text_data=json.dumps({
                             'error': 'Commend is required.'
                         }))
@@ -188,7 +193,7 @@ class GameLobbyConsumer(AsyncWebsocketConsumer):
             errorm= str(e)
             formatted_tb = traceback.format_tb(e.__traceback__)
             for l in formatted_tb:
-                e+=l+'\n'
+                e+=str(l)+'\n'
             logger.error(errorm)
             await self.send('server error')
 

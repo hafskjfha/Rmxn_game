@@ -15,7 +15,7 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({ children }
     if (!socket) {
       const nickname = localStorage.getItem("nickname") || "Guest";
       const ws = new WebSocket(
-        `ws://127.0.0.1:8000/ws/lobby/?nickname=${encodeURIComponent(nickname)}`
+        `${process.env.REACT_APP_WS_URI}/ws/lobby/?nickname=${encodeURIComponent(nickname)}`
       );
 
       ws.onopen = () => console.log("WebSocket connected");
