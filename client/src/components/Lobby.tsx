@@ -114,6 +114,10 @@ const Lobby: React.FC = () => {
       console.log("WebSocket closed");
     };
 
+    ws.onerror = (e) =>{
+      console.log(e)
+    }
+
     return () => {
       ws.close();
     };

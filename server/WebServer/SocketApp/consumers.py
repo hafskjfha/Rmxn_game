@@ -1,8 +1,9 @@
-import json,redis,logging,traceback
+import json,logging,traceback
 from channels.generic.websocket import AsyncWebsocketConsumer
 from urllib.parse import parse_qs
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
+from DBapp.redis.redisc import redis_clinet_manager
 
 logger = logging.getLogger('common')
 
@@ -92,6 +93,53 @@ class GameRoomConsumer(AsyncWebsocketConsumer):
                 'setting':setting['setting']
             }
         )
+rediz = redis_clinet_manager()
+class GameRoomComputerConsumer(AsyncWebsocketConsumer):
+    async def connect(self):
+        try:
+            self.room_name = rediz.find_or_create_room()
+            self.room_group_name = f"cgame_{self.room_name}"
+
+            rediz.redis_client.hincrby(self.room_name, "user_count", 1)
+
+            await self.channel_layer.group_add(
+                self.room_group_name,
+                self.channel_name
+            )
+
+            await self.accept()
+            await self.send(text_data=json.dumps({
+                            'info': f'room id = {self.room_group_name}'
+                        }))
+        
+        except Exception as e:
+            logger.error(e)
+            await self.close(1006)
+    
+    async def disconnect(self,code):
+        rediz.redis_client.hincrby(self.room_name, "user_count", -1)
+
+        await self.channel_layer.group_discard(
+            self.room_group_name,
+            self.channel_name
+        )
+
+    async def receive(self, text_data=None, bytes_data=None):
+        try:
+            data = json.loads(text_data)
+            command = data.get('command', '')
+            if not command:
+                self.send('need command.')
+                return
+            
+            
+            
+
+
+        except Exception as e:
+            logger.error(e)
+            self.send("unexpected error")
+        
 
 
 rid=1

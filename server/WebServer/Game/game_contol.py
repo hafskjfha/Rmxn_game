@@ -55,12 +55,29 @@ class Game:
         except Exception as e:
             logger.error(f'unexcept error: word:{word} error name:{e}')
             return '5x'
+        
+    def check_start_kill(self,chin:int):
+        """
+        시작 한방 인지 확인하는 함수
+
+        Arguments:
+            word : 시작한방인지 검사할 단어
+
+        Return:
+            str(bool)
+            시작한방 아님: 6y
+            시작한방 맞음: 6x
+        """
+        if chin>1:
+            return "6y"
     
     
 class ComHandler:
     def __init__(self) -> None:
         with open("",'r',encoding='utf-8') as f:
             self.com_word_db = f.read().split()
+
+
     
 
 

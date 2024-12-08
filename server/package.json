@@ -4,6 +4,8 @@
   },
   "scripts": {
     "start": "cd WebServer && python manage.py runserver",
-    "mag": "cd WebServer && python manage.py makemigrations && python manage.py migrate"
+    "mag": "cd WebServer && python manage.py makemigrations && python manage.py migrate",
+    "mpip": "pip freeze > requirements.txt",
+    "dpip": "pip install -r requirements.txt"
   }
 }

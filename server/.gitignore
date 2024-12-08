@@ -62,3 +62,4 @@ __pycache__
 logs
 *.log
 redis_tets.py
+test.py

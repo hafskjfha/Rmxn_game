@@ -151,6 +151,23 @@ CORS_ALLOWED_ORIGINS = [
     "https://ominous-space-winner-x55xg5rp4x553v5w5-8000.app.github.dev",
 ]
 
+CORS_ORIGIN_WHITELIST =["http://localhost:3000",  # React의 주소
+    "https://ominous-space-winner-x55xg5rp4x553v5w5-3000.app.github.dev",
+    "https://ominous-space-winner-x55xg5rp4x553v5w5-8000.app.github.dev",
+    "https://github.dev"
+]
+
+CORS_ALLOW_METHODS = [
+    'DELETE',
+    'GET',
+    'OPTIONS',
+    'PATCH',
+    'POST',
+    'PUT',
+]
+
+CORS_ALLOW_HEADERS =['manifest.json',]
+
 # settings.py
 
 # settings.py
@@ -191,3 +208,5 @@ LOGGING = {
         
     },
 }
+
+
