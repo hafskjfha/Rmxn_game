@@ -12,6 +12,9 @@ class Game:
         start_letter_file = os.path.join(current_dir, '../Data/start_letters.txt')
         with open(start_letter_file,'r',encoding='utf-8') as f:
             self.start_letters = f.read().split()
+        not_onecut_letter_file = os.path.join(current_dir, '../Data/not_onecut_letter.txt')
+        with open(not_onecut_letter_file,'r',encoding='utf-8') as f:
+            self.not_onecut=f.read().split()
         logger.info('Game class init')
     
     def check_word_in_db(self,cword:str)->str:
@@ -23,40 +26,19 @@ class Game:
 
         Return:
             사전에 있는가?
-            True : 3y
+            True : 뜻
             False : 3x
         """
         try:
             if Product.objects.filter(word=cword).exists():
-                return '3y'
+                return '3y' #뜻 추가예정
             else:
                 return '3x'
         except Exception as e:
             logger.error(f'unexcept error: word:{cword}, error name:{e}')
             return '3x'
         
-    def check_word_len(self,word:str)->str:
-        """
-        한글자인지 확인 하는 함수
-
-        Arguments:
-            word: 검사할 단어
-
-        Return :
-            1글자 인가?
-            True: 5x
-            False : 5y
-        """
-        try:
-            if len(word)>1:
-                return '5y'
-            else:
-                return '5x'
-        except Exception as e:
-            logger.error(f'unexcept error: word:{word} error name:{e}')
-            return '5x'
-        
-    def check_start_kill(self,chin:int):
+    def check_start_kill(self,chin:int,word:str):
         """
         시작 한방 인지 확인하는 함수
 
@@ -70,12 +52,101 @@ class Game:
         """
         if chin>1:
             return "6y"
+
+        sub=duem(word[-1])
+        if sub not in self.not_onecut or word[-1] not in self.not_onecut:
+            return "6y"
+        return "6x"
     
+    def start_word_rand(self)->str:
+        """
+        시작 단어 추출함수
+
+        Return :
+            str : 시작 글자
+        """
+        pattern = re.compile("[^ㄱ-ㅎㅏ-ㅣ가-힣]+")
+        valid_words:list[str] = [word for word in self.start_letters if not pattern.search(word)]
+        if valid_words:
+            return random.choice(valid_words)
+        else:
+            return ValueError("시작 단어가 없습니다.")
+
+
     
-class ComHandler:
+
+class CommonGameHander:
     def __init__(self) -> None:
-        with open("",'r',encoding='utf-8') as f:
-            self.com_word_db = f.read().split()
+        self.used:set[str] = set()
+        self.chain:int = 0
+        self.core = Game()
+
+    def reset(self)->None:
+        """게임 다시 시작하기전 초기화"""
+        self.used=set()
+        self.chain=0
+
+    def check_word(self,word:str) -> tuple[bool,str]:
+        """사용자가 입력한 단어를 검증하는 함수
+        
+        Arguments:
+            word:str => 검증할 단어
+
+        Return:
+            bool,str => (가능 여부,(단어 뜻 or 이유))
+        """
+        if self.core.check_start_kill(self.chain,word)=="6x":
+            return (False,'시작 한방 금지')
+
+        if len(word.strip())<2 or word[0] not in (self.st_letter,self.sust_letter):
+            return (False,'시작 단어와 맞지 않음')
+        
+        if word in self.used:
+            return (False,'이미 사용된 단어')
+        
+        mean = self.core.check_word_in_db(word)
+        if mean=='3x':
+            return (False,'사전에 없는 단어')
+        
+        self.update(word)
+        return (True,mean)
+
+    def update(self,word:str) -> None:
+        """게임 진행 상태 업데이트"""
+        self.used.add(word)
+        self.chain+=1
+    
+    def start(self)->str:
+        """게임 시작을 처리 하는 함수"""
+        self.reset()
+        self.st_letter:str = self.core.start_word_rand() #시작 글자
+        self.sust_letter:str = duem(self.st_letter) #(두음)된 시작글자
+        return f'{self.st_letter}' if self.st_letter==self.sust_letter else f'{self.st_letter}({self.sust_letter})'
+        
+
+class ComputerGameHander(CommonGameHander):
+    def __init__(self):
+        super().__init__()
+        com_word_file =os.path.join(current_dir, '.\\computer_db.txt')
+        with open(com_word_file,encoding='utf8') as f:
+            self.comdb = f.read().split()
+    def com_select_word(self)->tuple[bool,str]:
+        """
+        컴퓨터가 단어를 선택하는 함수
+
+        Retrun:
+            tuple[bool,str] => 단어 성공 여부, 선택된 단어
+        """
+        sel_words=[word for word in self.comdb if word[0] in (self.st_letter,self.sust_letter) and word not in self.used]
+        if not sel_words:
+            return (False,'ㅠㅠ')
+        
+        if self.chain>3:
+            necut=[word for word in sel_words if word[-1] not in self.core.not_onecut]
+            if necut:
+                return (True,random.choice(necut))
+        return (True,random.choice(sel_words))
+        
 
 
     
