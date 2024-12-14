@@ -4,6 +4,7 @@ from urllib.parse import parse_qs
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
 from DBapp.redis.redisc import redis_clinet_manager
+from Game.game_contol import ComputerGameHander
 
 logger = logging.getLogger('common')
 
@@ -94,6 +95,7 @@ class GameRoomConsumer(AsyncWebsocketConsumer):
             }
         )
 rediz = redis_clinet_manager()
+cores:dict[str,ComputerGameHander] = dict()
 class GameRoomComputerConsumer(AsyncWebsocketConsumer):
     async def connect(self):
         try:
@@ -108,9 +110,9 @@ class GameRoomComputerConsumer(AsyncWebsocketConsumer):
             )
 
             await self.accept()
-            await self.send(text_data=json.dumps({
-                            'info': f'room id = {self.room_group_name}'
-                        }))
+            await self.send(text_data=json.dumps({'info': f'room id = {self.room_group_name}'}))
+            if self.room_group_name not in cores:
+                cores[self.room_group_name] = ComputerGameHander()
         
         except Exception as e:
             logger.error(e)
@@ -126,11 +128,26 @@ class GameRoomComputerConsumer(AsyncWebsocketConsumer):
 
     async def receive(self, text_data=None, bytes_data=None):
         try:
-            data = json.loads(text_data)
+            data:dict[str,str] = json.loads(text_data)
             command = data.get('command', '')
             if not command:
                 self.send('need command.')
                 return
+            
+            if 'game_start' == command:
+                cc = cores[self.room_group_name]
+                s = cc.start()
+                pt = cc.player_turn
+                self.send(text_data=json.dumps({
+                    'type':'game_start',
+                    'start_letter':s,
+                    'player_turn':pt
+                }))
+                return
+
+            if 'user_input' == command:
+                input = data.get('input')
+                
             
             
             

@@ -1,4 +1,4 @@
-from hangul_system import duem
+from .hangul_system import duem
 import re,sys,os,random,logging
 from DBapp.models import Product
 
@@ -80,6 +80,7 @@ class CommonGameHander:
         self.used:set[str] = set()
         self.chain:int = 0
         self.core = Game()
+        self.player_turn:bool = False
 
     def reset(self)->None:
         """게임 다시 시작하기전 초기화"""
@@ -95,11 +96,11 @@ class CommonGameHander:
         Return:
             bool,str => (가능 여부,(단어 뜻 or 이유))
         """
-        if self.core.check_start_kill(self.chain,word)=="6x":
-            return (False,'시작 한방 금지')
-
         if len(word.strip())<2 or word[0] not in (self.st_letter,self.sust_letter):
             return (False,'시작 단어와 맞지 않음')
+        
+        if self.core.check_start_kill(self.chain,word)=="6x":
+            return (False,'시작 한방 금지')
         
         if word in self.used:
             return (False,'이미 사용된 단어')
@@ -115,12 +116,16 @@ class CommonGameHander:
         """게임 진행 상태 업데이트"""
         self.used.add(word)
         self.chain+=1
+        self.st_letter = word[-1]
+        self.sust_letter = duem(self.st_letter)
+
     
     def start(self)->str:
         """게임 시작을 처리 하는 함수"""
         self.reset()
         self.st_letter:str = self.core.start_word_rand() #시작 글자
         self.sust_letter:str = duem(self.st_letter) #(두음)된 시작글자
+        self.player_turn = True if random.randint(0,1) else False #플레이어턴 랜덤 선택
         return f'{self.st_letter}' if self.st_letter==self.sust_letter else f'{self.st_letter}({self.sust_letter})'
         
 
@@ -130,6 +135,7 @@ class ComputerGameHander(CommonGameHander):
         com_word_file =os.path.join(current_dir, '.\\computer_db.txt')
         with open(com_word_file,encoding='utf8') as f:
             self.comdb = f.read().split()
+
     def com_select_word(self)->tuple[bool,str]:
         """
         컴퓨터가 단어를 선택하는 함수
@@ -146,6 +152,38 @@ class ComputerGameHander(CommonGameHander):
             if necut:
                 return (True,random.choice(necut))
         return (True,random.choice(sel_words))
+    
+    def main(self,command:dict[str,str]):
+        """게임 메인 컨트롤러 함수"""
+        if 'start' in command:
+            sss = self.start()
+            self.turn_time:float = 10.0 #game timer start logic
+            return sss,self.player_turn #시작 단어, 시작 턴
+        
+        if 'input' in command:
+            #after timer check===
+            if not self.player_turn:
+                return False,''
+            word=command.get('input')
+            c,s = self.check_word(word)
+            if not c:
+                return c,s
+            
+            self.player_turn = not self.player_turn
+            self.turn_time = max(self.turn_time-0.1,0.4)
+            return c,s
+        
+        if 'computer' in command:
+            #after time check===
+            if not self.player_turn:
+                c,s = self.com_select_word()
+                return c,s
+            return False,''
+        
+            
+
+            
+
         
 
 
