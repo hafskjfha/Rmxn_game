@@ -5,6 +5,7 @@ from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
 from DBapp.redis.redisc import redis_clinet_manager
 from Game.game_contol import ComputerGameHander
+from datetime import datetime, timedelta, timezone
 
 logger = logging.getLogger('common')
 
@@ -94,6 +95,7 @@ class GameRoomConsumer(AsyncWebsocketConsumer):
                 'setting':setting['setting']
             }
         )
+
 rediz = redis_clinet_manager()
 cores:dict[str,ComputerGameHander] = dict()
 class GameRoomComputerConsumer(AsyncWebsocketConsumer):
@@ -131,32 +133,151 @@ class GameRoomComputerConsumer(AsyncWebsocketConsumer):
             data:dict[str,str] = json.loads(text_data)
             command = data.get('command', '')
             if not command:
-                self.send('need command.')
+                await self.send(text_data=json.dumps({
+                    'error':'no command'
+                }))
                 return
             
             if 'game_start' == command:
                 cc = cores[self.room_group_name]
-                s = cc.start()
-                pt = cc.player_turn
-                self.send(text_data=json.dumps({
+                pt,s = await cc.main(command={'start':'1'})
+                start_time = datetime.now(timezone.utc)
+                tt = cc.turn_time
+                end_time = start_time + timedelta(seconds=tt)
+                await self.channel_layer.group_send(
+                    self.room_group_name,{
                     'type':'game_start',
                     'start_letter':s,
-                    'player_turn':pt
-                }))
+                    'player_turn':pt,
+                    "start_time": start_time.isoformat(),
+                    "time_limit": tt
+                })
+                self.ptinfo = {
+                    'st':start_time,
+                    'et':end_time
+                }
+                #컴퓨터턴 체크
                 return
 
             if 'user_input' == command:
-                input = data.get('input')
-                
-            
-            
-            
+                uinput = data.get('input','')
+                if not uinput:
+                    return await self.send(text_data=json.dumps({
+                        'error':'no input'
+                    }))
+                pt_time = datetime.now(timezone.utc)
+                if not pt_time <= self.ptinfo["et"]:
+                    await self.channel_layer.group_send(
+                        self.room_group_name,
+                        {
+                            'type':'turn_over',
+                            'message':'over'
+                        }
+                    )
+                    return
+                coc = cores[self.room_group_name]
+                bb,n = await coc.main(command={'input':uinput})
+                if not bb:
+                    await self.channel_layer.group_send(
+                        self.room_group_name,
+                        {
+                            'type':'pturn_no',
+                            'message':n,
+                            'word':uinput
+                        }
+                    )
+                    return
+                lll = coc.st_letter if coc.st_letter==coc.sust_letter else f'{coc.st_letter}({coc.sust_letter})'
+                start_time = datetime.now(timezone.utc)
+                tt = coc.turn_time
+                end_time = start_time + timedelta(seconds=tt)
+                await self.channel_layer.group_send(
+                    self.room_group_name,
+                    {
+                        'type':'pturn_yes',
+                        'message':n,
+                        'word':uinput,
+                        'letter':lll,
+                        'player_turn':coc.player_turn,
+                        "start_time": start_time.isoformat(),
+                        "time_limit": tt,
+                        "chain":coc.chain
+                        
+                    }
+                )
 
+                if coc.player_turn == False:
+                    bb,n,m = await coc.main(command={'computer':'1'})
+                    if not bb:
+                        await self.channel_layer.group_send(
+                            self.room_group_name,
+                            {
+                                'type':'cturn_no',
+                                'message':'no_word',
+                                'word':n
+                            }
+                        )
+                        return
+                    start_time = datetime.now(timezone.utc)
+                    tt = coc.turn_time
+                    end_time = start_time + timedelta(seconds=tt)
+                    lll = coc.st_letter if coc.st_letter==coc.sust_letter else f'{coc.st_letter}({coc.sust_letter})'
+                    await self.channel_layer.group_send(
+                        self.room_group_name,
+                        {
+                            'type':'cturn_yes',
+                            'message':m,
+                            'word':n,
+                            "chain":coc.chain   
+                        }
+                    )
+                    
+                    lll = coc.st_letter if coc.st_letter==coc.sust_letter else f'{coc.st_letter}({coc.sust_letter})'
+                    start_time = datetime.now(timezone.utc)
+                    tt = coc.turn_time
+                    end_time = start_time + timedelta(seconds=tt)
+                    self.ptinfo = {
+                        'st':start_time,
+                        'et':end_time
+                    }
+                    await self.channel_layer.group_send(
+                        self.room_group_name,
+                        {
+                            'type':'pturn_start',
+                            'letter': lll,
+                            'player_turn': coc.player_turn,
+                            "start_time": start_time.isoformat(),
+                            "time_limit": tt, 
+                        }
+                    )
+
+                return
+            
 
         except Exception as e:
             logger.error(e)
             self.send("unexpected error")
         
+    async def game_start(self,e):
+        await self.send(json.dumps(e))
+
+    async def turn_over(self,e):
+        await self.send(json.dumps(e))
+
+    async def pturn_no(self,e):
+        await self.send(json.dumps(e))
+
+    async def pturn_yes(self,e):
+        await self.send(json.dumps(e))
+
+    async def cturn_no(self,e):
+        await self.send(json.dumps(e))
+    
+    async def cturn_yes(self,e):
+        await self.send(json.dumps(e))
+
+    async def pturn_start(self,e):
+        await self.send(json.dumps(e))
 
 
 rid=1
@@ -209,13 +330,13 @@ class GameLobbyConsumer(AsyncWebsocketConsumer):
                             'name': data['name'] ,
                         }))
                     await self.channel_layer.group_send(
-                    'lobby',
-                        {
-                            'type': 'room_create',
-                            'name': data['name'] ,
-                            'number': rid,
-                            'setting': data['setting']
-                        }
+                        'lobby',
+                            {
+                                'type': 'room_create',
+                                'name': data['name'] ,
+                                'number': rid,
+                                'setting': data['setting']
+                            }
                     )
                     rid+=1
                 elif commend=="room_delete":

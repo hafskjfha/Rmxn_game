@@ -1,6 +1,8 @@
 from .hangul_system import duem
 import re,sys,os,random,logging
-from DBapp.models import Product
+from DBapp.models import Word
+from django.shortcuts import get_object_or_404
+
 
 logger = logging.getLogger('common')
 
@@ -17,7 +19,7 @@ class Game:
             self.not_onecut=f.read().split()
         logger.info('Game class init')
     
-    def check_word_in_db(self,cword:str)->str:
+    async def check_word_in_db(self,cword:str)->str:
         """
         단어가 사전에 있는 단어인지 검사하는 함수
 
@@ -30,14 +32,32 @@ class Game:
             False : 3x
         """
         try:
-            if Product.objects.filter(word=cword).exists():
-                return '3y' #뜻 추가예정
+            m = await self.check_db(cword)
+            if (n:=m.get('meaning',False)):
+                return n 
             else:
                 return '3x'
         except Exception as e:
             logger.error(f'unexcept error: word:{cword}, error name:{e}')
             return '3x'
         
+    async def check_db(self,cword:str)->dict[str,str]:
+        """
+        주어진 단어를 비동기적으로 조회하여 뜻을 반환합니다.
+        
+        Arguments:
+            word : 검색할 단어
+
+        Return:
+            있음: {word:단어, meaning:뜻}
+            없음: {error:404}
+        """
+        try:
+            word = await Word.objects.aget(word=cword)
+            return {'word': word.word, 'meaning': word.meaning}
+        except Word.DoesNotExist:
+            return {'error': '404'}
+
     def check_start_kill(self,chin:int,word:str):
         """
         시작 한방 인지 확인하는 함수
@@ -87,7 +107,7 @@ class CommonGameHander:
         self.used=set()
         self.chain=0
 
-    def check_word(self,word:str) -> tuple[bool,str]:
+    async def check_word(self,word:str) -> tuple[bool,str]:
         """사용자가 입력한 단어를 검증하는 함수
         
         Arguments:
@@ -105,7 +125,7 @@ class CommonGameHander:
         if word in self.used:
             return (False,'이미 사용된 단어')
         
-        mean = self.core.check_word_in_db(word)
+        mean = await self.core.check_word_in_db(word)
         if mean=='3x':
             return (False,'사전에 없는 단어')
         
@@ -153,19 +173,19 @@ class ComputerGameHander(CommonGameHander):
                 return (True,random.choice(necut))
         return (True,random.choice(sel_words))
     
-    def main(self,command:dict[str,str]):
+    async def main(self,command:dict[str,str])->tuple[bool,str,None|str]:
         """게임 메인 컨트롤러 함수"""
         if 'start' in command:
             sss = self.start()
             self.turn_time:float = 10.0 #game timer start logic
-            return sss,self.player_turn #시작 단어, 시작 턴
+            return self.player_turn,sss, # 시작 턴, 시작 단어
         
         if 'input' in command:
             #after timer check===
             if not self.player_turn:
                 return False,''
             word=command.get('input')
-            c,s = self.check_word(word)
+            c,s = await self.check_word(word)
             if not c:
                 return c,s
             
@@ -174,10 +194,18 @@ class ComputerGameHander(CommonGameHander):
             return c,s
         
         if 'computer' in command:
-            #after time check===
             if not self.player_turn:
                 c,s = self.com_select_word()
-                return c,s
+                if not c:
+                    return False,s
+                b,n = await self.check_word(s)
+                if b:
+                    self.player_turn = not self.player_turn
+                    self.turn_time = max(self.turn_time-0.1,0.4)
+                    self.update(s)
+                    return b,s,n
+                else:
+                    return False,'ㅠㅠ',''
             return False,''
         
             
