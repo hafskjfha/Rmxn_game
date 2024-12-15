@@ -22,13 +22,13 @@ class redis_clinet_manager:
         self.redis_client.hset(new_room, "user_count", 0)
         self.redis_client.set(max_room_key, new_room_number)
         
-        return new_room
+        return new_room.replace(':',".")
 
     # 빈 방 찾기 또는 새 방 생성
     def find_or_create_room(self):
         rooms = self.redis_client.scan_iter(match="croom:*")
         for room in rooms:
             if room.decode("utf-8") != "croom:max_number" and self.redis_client.hget(room, "user_count") == b"0":
-                return room.decode("utf-8")
+                return room.decode("utf-8").replace(":",'.')
         # 빈 방이 없으면 새 방 생성
         return self.create_new_room()    

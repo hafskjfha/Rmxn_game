@@ -152,7 +152,7 @@ class CommonGameHander:
 class ComputerGameHander(CommonGameHander):
     def __init__(self):
         super().__init__()
-        com_word_file =os.path.join(current_dir, '.\\computer_db.txt')
+        com_word_file =os.path.join(current_dir, '../Data/computer_db.txt')
         with open(com_word_file,encoding='utf8') as f:
             self.comdb = f.read().split()
 
@@ -177,7 +177,7 @@ class ComputerGameHander(CommonGameHander):
         """게임 메인 컨트롤러 함수"""
         if 'start' in command:
             sss = self.start()
-            self.turn_time:float = 10.0 #game timer start logic
+            self.turn_time:float = 30.0 #game timer start logic
             return self.player_turn,sss, # 시작 턴, 시작 단어
         
         if 'input' in command:
