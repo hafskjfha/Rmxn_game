@@ -5,6 +5,18 @@ import WordChainGameUI from "./GameUI";
 import VsComputerLobby from "./ComputerGame";
 import { useWebSocket } from "./GWebSocketProvider";
 
+interface wsjson{
+    type: string;
+    player_turn?: boolean;
+    start_letter?: string;
+    start_time?: string;
+    time_limit?: number;
+    message?: string;
+    chain?: number;
+    letter?: string;
+    word?: string;
+}
+
 const GameHandler: React.FC = () => {
     const { socket, subscribe } = useWebSocket();
     const [currentTurn, setCurrentTurn] = useState<"user" | "computer">("user");
@@ -15,9 +27,12 @@ const GameHandler: React.FC = () => {
 
     useEffect(() => {
         const unsubscribeFunc = subscribe((message) => {
-            const j = JSON.parse(message);
+            const j:wsjson = JSON.parse(message);
             console.log("A received message:", j);
             if (j.type==="game_start"){
+                setCurrentTurn(j.player_turn ? "user" : "computer")
+            }
+            else if(j.type==="pturn_start"){
                 setCurrentTurn(j.player_turn ? "user" : "computer")
             }
         });

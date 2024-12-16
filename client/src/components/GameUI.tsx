@@ -2,6 +2,18 @@ import React, { useState, useEffect } from "react";
 import "./css/WordChainGameUI.css";
 import { useWebSocket } from "./GWebSocketProvider";
 
+interface wsjson{
+    type: string;
+    player_turn?: boolean;
+    start_letter?: string;
+    start_time?: string;
+    time_limit?: number;
+    message?: string;
+    chain?: number;
+    letter?: string;
+    word?: string;
+}
+
 const WordChainGameUI: React.FC = () => {
     const {socket, subscribe} = useWebSocket();
     const [inputValue, setInputValue] = useState("");
@@ -10,14 +22,59 @@ const WordChainGameUI: React.FC = () => {
     const [inText, setText] = useState<string>("텍스트 한 줄 표시 영역");
     const [chain,setChain] = useState<number>(0);
     const [currentTurn,setTurn] = useState<boolean>(false);
+    const [usedq,setq] = useState<string[]>([]);
+    const [isError, setIsError] = useState(false);
 
     useEffect(() => {
         const unsubscribe = subscribe((message) => {
-            const j = JSON.parse(message);
-            console.log('B received message:', j);
-            setText(j.start_letter as string);
-            setTimeLeft(j.time_limit);
-            setBarWidth(100);
+            const j:wsjson = JSON.parse(message) ;
+            console.log('B received message:', j,performance.now());
+            if (j.type==="game_start"){
+                setText(j.start_letter as string);
+                setTimeLeft(j.time_limit as number);
+                setBarWidth(100);
+                console.log(j.player_turn)
+                if (!j.player_turn){
+                    console.log(socket)
+                    socket?.send(JSON.stringify({command:"compin"}))
+                }
+            }
+            else if(j.type==="cturn_yes"){
+                setText(j.word as string);
+                setChain(j.chain as number);
+                setq([...usedq, j.message as string]);
+            }
+            else if(j.type==="cturn_no"){
+                setText(j.word as string)
+            }
+            else if(j.type==="pturn_start"){
+                const timer = setTimeout(()=>{
+                    setText(j.letter as string);
+                    setTimeLeft(j.time_limit as number);
+                    setBarWidth(100);
+                },700)
+            }
+            else if (j.type==="pturn_no"){
+                setText(`${j.word} ; ${j.message}`);
+                setIsError(true);
+                setTimeout(() => {
+                    setIsError(false); // 1초 후 원래 상태로 복구
+                    setText(j.letter as string);
+                    //setInputValue("");
+                }, 1000);
+            }
+            else if (j.type === "pturn_yes") {
+                setText(j.word as string);
+                setTimeLeft(j.time_limit as number);
+                setBarWidth(100);
+                //setInputValue("");
+            
+                setTimeout(() => {
+                    setText(j.letter as string);
+                }, 1000); 
+            }
+            
+
         });
         console.log('f')
         return unsubscribe;
@@ -43,11 +100,12 @@ const WordChainGameUI: React.FC = () => {
     };
 
     const handleConfirm = () => {
-        console.log("입력한 단어:", inputValue);
-        setText(inputValue);
+        //console.log("입력한 단어:", inputValue);
+        socket?.send(JSON.stringify({command:'user_input',input:inputValue}))
+        // setText(inputValue);
         setInputValue(""); // 입력값 초기화
-        setTimeLeft(10); // 시간 초기화
-        setBarWidth(100); // 막대 너비 초기화
+        // setTimeLeft(10); // 시간 초기화
+        // setBarWidth(100); // 막대 너비 초기화
     };
 
     const handleKeyPress = (event: React.KeyboardEvent<HTMLInputElement>) => {
@@ -61,7 +119,7 @@ const WordChainGameUI: React.FC = () => {
             {/* 중앙 본 박스 */}
             <div className="main-box-container flex flex-col items-center bg-white shadow-lg border-2 border-black rounded-xl p-4 w-full max-w-2xl relative">
                 {/* 본 박스 내용 */}
-                <div className="main-box-content text-center text-gray-800 text-xl font-bold">
+                <div className={`main-box-content text-center text-xl font-bold ${isError ? "text-red-500" : "text-gray-800"}`}>
                     {inText}
                 </div>
 

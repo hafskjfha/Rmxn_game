@@ -1,4 +1,4 @@
-import json,logging,traceback
+import json,logging,traceback,asyncio
 from channels.generic.websocket import AsyncWebsocketConsumer
 from urllib.parse import parse_qs
 from channels.layers import get_channel_layer
@@ -169,32 +169,6 @@ class GameRoomComputerConsumer(AsyncWebsocketConsumer):
                     'et':end_time
                 }
                 
-                if not pt:
-                    e = await com(coc)
-                    
-                    await self.channel_layer.group_send(
-                            self.room_group_name,
-                            e
-                        )
-                    
-                    lll = coc.st_letter if coc.st_letter==coc.sust_letter else f'{coc.st_letter}({coc.sust_letter})'
-                    start_time = datetime.now(timezone.utc)
-                    tt = coc.turn_time
-                    end_time = start_time + timedelta(seconds=tt)
-                    self.ptinfo = {
-                        'st':start_time,
-                        'et':end_time
-                    }
-                    await self.channel_layer.group_send(
-                        self.room_group_name,
-                        {
-                            'type':'pturn_start',
-                            'letter': lll,
-                            'player_turn': coc.player_turn,
-                            "start_time": start_time.isoformat(),
-                            "time_limit": tt, 
-                        }
-                    )
                 return
 
             if 'user_input' == command:
@@ -216,12 +190,14 @@ class GameRoomComputerConsumer(AsyncWebsocketConsumer):
                 coc = cores[self.room_group_name]
                 bb,n = await coc.main(command={'input':uinput})
                 if not bb:
+                    lll = coc.st_letter if coc.st_letter==coc.sust_letter else f'{coc.st_letter}({coc.sust_letter})'
                     await self.channel_layer.group_send(
                         self.room_group_name,
                         {
                             'type':'pturn_no',
                             'message':n,
-                            'word':uinput
+                            'word':uinput,
+                            'letter':lll
                         }
                     )
                     return
@@ -243,15 +219,17 @@ class GameRoomComputerConsumer(AsyncWebsocketConsumer):
                         
                     }
                 )
-
+                    
+                return
+            
+            if command=="compin":
+                coc = cores[self.room_group_name]
                 if coc.player_turn == False:
                     e = await com(coc)
-                    
                     await self.channel_layer.group_send(
                             self.room_group_name,
                             e
                         )
-
                     lll = coc.st_letter if coc.st_letter==coc.sust_letter else f'{coc.st_letter}({coc.sust_letter})'
                     start_time = datetime.now(timezone.utc)
                     tt = coc.turn_time
@@ -271,8 +249,6 @@ class GameRoomComputerConsumer(AsyncWebsocketConsumer):
                         }
                     )
 
-                return
-            
 
         except Exception as e:
             logger.error(e)

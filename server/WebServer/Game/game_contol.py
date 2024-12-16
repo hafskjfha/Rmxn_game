@@ -33,6 +33,7 @@ class Game:
         """
         try:
             m = await self.check_db(cword)
+            print(cword,m)
             if (n:=m.get('meaning',False)):
                 return n 
             else:
@@ -74,7 +75,7 @@ class Game:
             return "6y"
 
         sub=duem(word[-1])
-        if sub not in self.not_onecut or word[-1] not in self.not_onecut:
+        if sub in self.not_onecut or word[-1] in self.not_onecut:
             return "6y"
         return "6x"
     
@@ -117,12 +118,15 @@ class CommonGameHander:
             bool,str => (가능 여부,(단어 뜻 or 이유))
         """
         if len(word.strip())<2 or word[0] not in (self.st_letter,self.sust_letter):
+            #print('a')
             return (False,'시작 단어와 맞지 않음')
         
         if self.core.check_start_kill(self.chain,word)=="6x":
+            #print('b')
             return (False,'시작 한방 금지')
         
         if word in self.used:
+            #print('c')
             return (False,'이미 사용된 단어')
         
         mean = await self.core.check_word_in_db(word)
@@ -199,10 +203,10 @@ class ComputerGameHander(CommonGameHander):
                 if not c:
                     return False,s
                 b,n = await self.check_word(s)
+                #print(b,s)
                 if b:
                     self.player_turn = not self.player_turn
                     self.turn_time = max(self.turn_time-0.1,0.4)
-                    self.update(s)
                     return b,s,n
                 else:
                     return False,'ㅠㅠ',''
