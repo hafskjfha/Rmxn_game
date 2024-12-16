@@ -98,6 +98,21 @@ class GameRoomConsumer(AsyncWebsocketConsumer):
 
 rediz = redis_clinet_manager()
 cores:dict[str,ComputerGameHander] = dict()
+async def com(coc:ComputerGameHander)->dict[str,str|int]:
+    bb,n,m = await coc.main(command={'computer':'1'})
+    if not bb:
+        return {
+                    'type':'cturn_no',
+                    'message':'no_word',
+                    'word':n
+                }
+    return {
+                'type':'cturn_yes',
+                'message':m,
+                'word':n,
+                "chain":coc.chain   
+            }
+
 class GameRoomComputerConsumer(AsyncWebsocketConsumer):
     async def connect(self):
         try:
@@ -156,7 +171,33 @@ class GameRoomComputerConsumer(AsyncWebsocketConsumer):
                     'st':start_time,
                     'et':end_time
                 }
-                #컴퓨터턴 체크
+                
+                if not pt:
+                    e = await com(coc)
+                    
+                    await self.channel_layer.group_send(
+                            self.room_group_name,
+                            e
+                        )
+                    
+                    lll = coc.st_letter if coc.st_letter==coc.sust_letter else f'{coc.st_letter}({coc.sust_letter})'
+                    start_time = datetime.now(timezone.utc)
+                    tt = coc.turn_time
+                    end_time = start_time + timedelta(seconds=tt)
+                    self.ptinfo = {
+                        'st':start_time,
+                        'et':end_time
+                    }
+                    await self.channel_layer.group_send(
+                        self.room_group_name,
+                        {
+                            'type':'pturn_start',
+                            'letter': lll,
+                            'player_turn': coc.player_turn,
+                            "start_time": start_time.isoformat(),
+                            "time_limit": tt, 
+                        }
+                    )
                 return
 
             if 'user_input' == command:
@@ -207,31 +248,13 @@ class GameRoomComputerConsumer(AsyncWebsocketConsumer):
                 )
 
                 if coc.player_turn == False:
-                    bb,n,m = await coc.main(command={'computer':'1'})
-                    if not bb:
-                        await self.channel_layer.group_send(
-                            self.room_group_name,
-                            {
-                                'type':'cturn_no',
-                                'message':'no_word',
-                                'word':n
-                            }
-                        )
-                        return
-                    start_time = datetime.now(timezone.utc)
-                    tt = coc.turn_time
-                    end_time = start_time + timedelta(seconds=tt)
-                    lll = coc.st_letter if coc.st_letter==coc.sust_letter else f'{coc.st_letter}({coc.sust_letter})'
-                    await self.channel_layer.group_send(
-                        self.room_group_name,
-                        {
-                            'type':'cturn_yes',
-                            'message':m,
-                            'word':n,
-                            "chain":coc.chain   
-                        }
-                    )
+                    e = await com(coc)
                     
+                    await self.channel_layer.group_send(
+                            self.room_group_name,
+                            e
+                        )
+
                     lll = coc.st_letter if coc.st_letter==coc.sust_letter else f'{coc.st_letter}({coc.sust_letter})'
                     start_time = datetime.now(timezone.utc)
                     tt = coc.turn_time
