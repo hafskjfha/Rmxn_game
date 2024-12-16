@@ -76,10 +76,7 @@ class GameRoomConsumer(AsyncWebsocketConsumer):
             #elif ~~
 
         except Exception as e:
-            errorm= str(e)
-            formatted_tb = traceback.format_tb(e.__traceback__)
-            for l in formatted_tb:
-                e+=str(l)+'\n'
+            errorm=repr(e)
             logger.error(errorm)
             await self.send('server error')
         
@@ -117,7 +114,7 @@ class GameRoomComputerConsumer(AsyncWebsocketConsumer):
                 cores[self.room_group_name] = ComputerGameHander()
         
         except Exception as e:
-            logger.error(e)
+            logger.error(repr(e))
             await self.close(1006)
     
     async def disconnect(self,code):
