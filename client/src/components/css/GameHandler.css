@@ -2,19 +2,27 @@
 
 /* 깜빡이는 애니메이션 */
 @keyframes turn-blink {
-    0% {
-      background-color: rgba(144, 238, 144, 0.5); /* 연두색 */
-    }
-    50% {
-      background-color: rgba(144, 238, 144, 1); /* 더 강한 연두색 */
-    }
-    100% {
-      background-color: rgba(144, 238, 144, 0.5);
-    }
+  0% {
+    background-color: rgba(144, 238, 144, 0.5); /* 연두색 */
   }
-  
-  /* 턴 애니메이션 클래스 */
-  .animate-turn {
-    animation: turn-blink 1s infinite ease-in-out;
+  50% {
+    background-color: rgba(144, 238, 144, 1); /* 더 강한 연두색 */
   }
-  
+  100% {
+    background-color: rgba(144, 238, 144, 0.5);
+  }
+}
+
+/* 턴 애니메이션 클래스 */
+.animate-turn {
+  animation: turn-blink 1s infinite ease-in-out;
+}
+
+.timer-bar {
+  border-radius: 9999px; /* 둥근 테두리 */
+  background-color: #e2e8f0; /* 회색 배경 */
+}
+
+.timer-bar > div {
+  transition: width 1s linear; /* 부드러운 진행 애니메이션 */
+}

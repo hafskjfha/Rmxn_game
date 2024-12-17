@@ -96,19 +96,22 @@ class GameRoomConsumer(AsyncWebsocketConsumer):
 rediz = redis_clinet_manager()
 cores:dict[str,ComputerGameHander] = dict()
 async def com(coc:ComputerGameHander)->dict[str,str|int]:
-    bb,n,m = await coc.main(command={'computer':'1'})
-    if not bb:
+    for _ in range(4):
+        bb,n,m = await coc.main(command={'computer':'1'})
+        if not bb:
+            continue
         return {
-                    'type':'cturn_no',
-                    'message':'no_word',
-                    'word':n
+                    'type':'cturn_yes',
+                    'message':m,
+                    'word':n,
+                    "chain":coc.chain   
                 }
+    
     return {
-                'type':'cturn_yes',
-                'message':m,
-                'word':n,
-                "chain":coc.chain   
-            }
+                        'type':'cturn_no',
+                        'message':'no_word',
+                        'word':n
+                    }
 
 class GameRoomComputerConsumer(AsyncWebsocketConsumer):
     async def connect(self):
@@ -230,6 +233,8 @@ class GameRoomComputerConsumer(AsyncWebsocketConsumer):
                             self.room_group_name,
                             e
                         )
+                    if e['message']=="no_word":
+                        return
                     lll = coc.st_letter if coc.st_letter==coc.sust_letter else f'{coc.st_letter}({coc.sust_letter})'
                     start_time = datetime.now(timezone.utc)
                     tt = coc.turn_time
@@ -248,6 +253,17 @@ class GameRoomComputerConsumer(AsyncWebsocketConsumer):
                             "time_limit": tt, 
                         }
                     )
+            if command=="turn_timeout":
+                pw = False if cores[self.room_group_name].player_turn else True
+                await self.channel_layer.group_send(
+                    self.room_group_name,
+                    {
+                        'type':'game_end',
+                        'winner':pw
+                    }
+                )
+                return
+            
 
 
         except Exception as e:
@@ -273,6 +289,9 @@ class GameRoomComputerConsumer(AsyncWebsocketConsumer):
         await self.send(json.dumps(e))
 
     async def pturn_start(self,e):
+        await self.send(json.dumps(e))
+
+    async def game_end(self,e):
         await self.send(json.dumps(e))
 
 

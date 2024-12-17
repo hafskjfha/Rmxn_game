@@ -15,6 +15,7 @@ interface wsjson{
     chain?: number;
     letter?: string;
     word?: string;
+    winner?: boolean;
 }
 
 const GameHandler: React.FC = () => {
@@ -22,6 +23,9 @@ const GameHandler: React.FC = () => {
     const [currentTurn, setCurrentTurn] = useState<"user" | "computer">("user");
     const [p, setp] = useState<boolean>(true);
     const [unsubscribe, setUnsubscribe] = useState<(() => void) | null>(null);
+    const [showModal, setShowModal] = useState<boolean>(false); // 모달 표시 상태
+    const [winner, setWinner] = useState<boolean>(false); // 승리 여부 상태
+    const [ok,setOK] = useState<boolean>(false);
 
     const nickname = localStorage.getItem("nickname") || "Guest";
 
@@ -34,6 +38,12 @@ const GameHandler: React.FC = () => {
             }
             else if(j.type==="pturn_start"){
                 setCurrentTurn(j.player_turn ? "user" : "computer")
+            }
+            else if(j.type==="pturn_yes"){
+                setCurrentTurn("computer")
+            }else if (j.type === "game_end") {
+                setWinner(j.winner || false); // 승리 여부 설정
+                setShowModal(true); // 모달 표시
             }
         });
         setUnsubscribe(() => unsubscribeFunc);
@@ -54,7 +64,16 @@ const GameHandler: React.FC = () => {
         setp(false); // 로비 화면으로 전환
     };
 
-    if (!p) {
+    const closeModalAndNavigate = () => {
+        setShowModal(false);
+        setOK(true);
+        if (unsubscribe){
+            console.log('Unsubscribing from WebSocket...')
+            unsubscribe()
+        }
+    };
+
+    if (!p || ok) {
         return <VsComputerLobby />;
     }
 
@@ -91,6 +110,21 @@ const GameHandler: React.FC = () => {
                     />
                 </div>
             </div>
+
+            {/* 승리/패배 모달 */}
+            {showModal && (
+                <div className="modal-overlay fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+                    <div className="modal-content bg-white p-6 rounded-lg shadow-lg text-center">
+                        <h2 className="text-2xl font-bold mb-4">{winner ? "🎉 승리했습니다!" : "😢 패배했습니다."}</h2>
+                        <button
+                            onClick={closeModalAndNavigate}
+                            className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none"
+                        >
+                            확인
+                        </button>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

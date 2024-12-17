@@ -194,14 +194,14 @@ class ComputerGameHander(CommonGameHander):
                 return c,s
             
             self.player_turn = not self.player_turn
-            self.turn_time = max(self.turn_time-0.1,0.4)
+            self.turn_time = max(self.turn_time-0.5,0.4)
             return c,s
         
         if 'computer' in command:
             if not self.player_turn:
                 c,s = self.com_select_word()
                 if not c:
-                    return False,s
+                    return False,s,'ㅠㅠ'
                 b,n = await self.check_word(s)
                 #print(b,s)
                 if b:
@@ -210,7 +210,7 @@ class ComputerGameHander(CommonGameHander):
                     return b,s,n
                 else:
                     return False,'ㅠㅠ',''
-            return False,''
+            return False,'',''
         
             
 

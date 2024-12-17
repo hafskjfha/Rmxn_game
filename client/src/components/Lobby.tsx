@@ -178,12 +178,12 @@ const Lobby: React.FC = () => {
 				<div className="flex justify-between items-center mb-4">
 					<h2 className="text-2xl font-bold">방 목록</h2>
 					<div className="flex gap-4">
-						<button
+						{/* {<button
 							onClick={() => setShowCreateRoomModal(true)}
 							className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition"
 						>
 							방 만들기
-						</button>
+						</button>} */}
 						<button
 							onClick={() => setShowDictionaryModal(true)}
 							className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition"
