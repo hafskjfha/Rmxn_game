@@ -2,7 +2,10 @@
   "dependencies": {
     "npm": "^10.9.0"
   },
-  "scripts":{
-    "start": "cd WebServer && python manage.py runserver"
+  "scripts": {
+    "start": "cd WebServer && python manage.py runserver 0.0.0.0:80",
+    "mag": "cd WebServer && python manage.py makemigrations && python manage.py migrate",
+    "mpip": "pip freeze > requirements.txt",
+    "dpip": "pip install -r requirements.txt"
   }
 }

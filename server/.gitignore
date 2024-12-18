@@ -61,3 +61,5 @@ __pycache__
 .env
 logs
 *.log
+redis_tets.py
+test.py
