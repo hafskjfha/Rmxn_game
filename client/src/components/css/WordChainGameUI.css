@@ -15,3 +15,25 @@
     word-wrap: break-word; /* 긴 단어 줄바꿈 */
     white-space: normal;   /* 기본적으로 줄바꿈 허용 */
 }
+
+.recent-word-enter {
+    transform: translateX(-100%);
+    opacity: 0;
+    transition: transform 0.3s ease-out, opacity 0.3s ease-out;
+}
+
+.recent-word-enter-active {
+    transform: translateX(0);
+    opacity: 1;
+}
+
+.recent-word-exit {
+    transform: translateX(0);
+    opacity: 1;
+    transition: transform 0.3s ease-out, opacity 0.3s ease-out;
+}
+
+.recent-word-exit-active {
+    transform: translateX(100%);
+    opacity: 0;
+}

@@ -1,7 +1,7 @@
 from .hangul_system import duem
 import re,sys,os,random,logging
 from DBapp.models import Word
-from django.shortcuts import get_object_or_404
+
 
 
 logger = logging.getLogger('common')
@@ -33,7 +33,7 @@ class Game:
         """
         try:
             m = await self.check_db(cword)
-            print(cword,m)
+            print('ss',cword,m)
             if (n:=m.get('meaning',False)):
                 return n 
             else:
@@ -118,20 +118,19 @@ class CommonGameHander:
             bool,str => (가능 여부,(단어 뜻 or 이유))
         """
         if len(word.strip())<2 or word[0] not in (self.st_letter,self.sust_letter):
-            #print('a')
             return (False,'시작 단어와 맞지 않음')
-        
-        if self.core.check_start_kill(self.chain,word)=="6x":
-            #print('b')
-            return (False,'시작 한방 금지')
-        
-        if word in self.used:
-            #print('c')
-            return (False,'이미 사용된 단어')
         
         mean = await self.core.check_word_in_db(word)
         if mean=='3x':
             return (False,'사전에 없는 단어')
+
+        if self.core.check_start_kill(self.chain,word)=="6x":
+            return (False,'시작 한방 금지')
+        
+        if word in self.used:
+            return (False,'이미 사용된 단어')
+        
+        
         
         self.update(word)
         return (True,mean)
@@ -159,7 +158,10 @@ class ComputerGameHander(CommonGameHander):
         com_word_file =os.path.join(current_dir, '../Data/computer_db.txt')
         with open(com_word_file,encoding='utf8') as f:
             self.comdb = f.read().split()
-
+        import json
+        at_file=os.path.join(current_dir, '../Data/attack.json')
+        with open(at_file,encoding='utf8') as jf:
+            self.p:dict[str,int] = json.load(jf)
     def com_select_word(self)->tuple[bool,str]:
         """
         컴퓨터가 단어를 선택하는 함수
@@ -175,7 +177,10 @@ class ComputerGameHander(CommonGameHander):
             necut=[word for word in sel_words if word[-1] not in self.core.not_onecut]
             if necut:
                 return (True,random.choice(necut))
-        return (True,random.choice(sel_words))
+        sel_words=[word for word in sel_words if word[-1] in self.core.not_onecut]
+        print('dj',sorted(sel_words,key=lambda x:(self.p.get(x[-1],0))))
+        ww = sorted(sel_words,key=lambda x:(self.p.get(x[-1],0)))[0]
+        return (True,ww)
     
     async def main(self,command:dict[str,str])->tuple[bool,str,None|str]:
         """게임 메인 컨트롤러 함수"""
@@ -194,19 +199,21 @@ class ComputerGameHander(CommonGameHander):
                 return c,s
             
             self.player_turn = not self.player_turn
-            self.turn_time = max(self.turn_time-0.5,0.4)
+            self.turn_time = max(self.turn_time-1,0.4)
             return c,s
         
         if 'computer' in command:
             if not self.player_turn:
-                c,s = self.com_select_word()
-                if not c:
-                    return False,s,'ㅠㅠ'
+                for _ in range(4):
+                    c,s = self.com_select_word()
+                    if c:
+                        break
+                else:
+                        return False,s,'ㅠㅠ'
                 b,n = await self.check_word(s)
-                #print(b,s)
                 if b:
                     self.player_turn = not self.player_turn
-                    self.turn_time = max(self.turn_time-0.1,0.4)
+                    self.turn_time = max(self.turn_time-1,0.4)
                     return b,s,n
                 else:
                     return False,'ㅠㅠ',''

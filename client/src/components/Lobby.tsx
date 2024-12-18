@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef } from "react";
 import "./css/Lobby.css";
 import { useNavigate } from "react-router-dom";
 import Modal from "./Modal";
+import Statistics from "./Statistics";
+import { useWebSocket } from "./GWebSocketProvider";
 
 interface RoomCardProps {
 	roomName: string;
@@ -70,6 +72,8 @@ const Lobby: React.FC = () => {
 	const [roomTitle, setRoomTitle] = useState("");
 	const [useOneWord, setUseOneWord] = useState(false);
 	const [initialTime, setInitialTime] = useState<string>("60");
+	const [userWin, setuserWin] = useState<number>(0);
+	const [computerWin, setcomputerWin] = useState<number>(0);
 	const navigate = useNavigate();
 
 	useEffect(() => {
@@ -98,7 +102,7 @@ const Lobby: React.FC = () => {
 				]);
 			}
 
-			if (data.message_type === "room_create" && data.room_name && data.room_number && data.room_setting) {
+			else if (data.message_type === "room_create" && data.room_name && data.room_number && data.room_setting) {
 				// Add the new room to the list
 				console.log(data.room_number)
 				setRooms((prev) => [
@@ -111,9 +115,14 @@ const Lobby: React.FC = () => {
 					...prev,
 				]);
 			}
-			if (data.message_type === "room_delete" && data.room_number) {
+			else if (data.message_type === "room_delete" && data.room_number) {
 				// Remove the room with the specified room_number from the list
 				setRooms((prev) => prev.filter((room) => room.id !== data.room_number));
+			}
+			else if (data.type==="game_load") {
+				
+				setuserWin(data.user_win);
+				setcomputerWin(data.computer_win);
 			}
 
 		};
@@ -165,12 +174,8 @@ const Lobby: React.FC = () => {
 
 	return (
 		<div className="lobby-container flex h-screen">
-			{/* 접속 중인 유저 섹션 */}
-			<aside className="users-section w-1/8 p-4 bg-gray-100 border-r border-gray-300">
-				<h2 className="text-xl font-bold mb-4">접속 중인 유저</h2>
-				{/* 유저 목록은 여기에 */}
-				<button className="mt-2" onClick={test}>zz</button>
-			</aside>
+			{/* 통계 */}
+			<Statistics computerWin={computerWin} userWin={userWin} />
 
 			{/* 메인 섹션 */}
 			<main className="rooms-section flex-1 flex flex-col p-4">

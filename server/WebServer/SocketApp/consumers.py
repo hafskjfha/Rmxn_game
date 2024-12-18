@@ -1,4 +1,4 @@
-import json,logging,traceback,asyncio
+import json,logging,traceback
 from channels.generic.websocket import AsyncWebsocketConsumer
 from urllib.parse import parse_qs
 from channels.layers import get_channel_layer
@@ -8,47 +8,6 @@ from Game.game_contol import ComputerGameHander
 from datetime import datetime, timedelta, timezone
 
 logger = logging.getLogger('common')
-
-class ChatConsumer(AsyncWebsocketConsumer):
-    async def connect(self):
-        self.room_name = self.scope['url_route']['kwargs']['room_name']
-        self.room_group_name = f'chat_{self.room_name}'
-
-        # 그룹에 추가
-        await self.channel_layer.group_add(
-            self.room_group_name,
-            self.channel_name
-        )
-
-        await self.accept()
-
-    async def disconnect(self, close_code):
-        # 그룹에서 제거
-        await self.channel_layer.group_discard(
-            self.room_group_name,
-            self.channel_name
-        )
-
-    async def receive(self, text_data):
-        data = json.loads(text_data)
-        message = data['message']
-
-        # 그룹에 메시지 전송
-        await self.channel_layer.group_send(
-            self.room_group_name,
-            {
-                'type': 'chat_message',
-                'message': message
-            }
-        )
-
-    async def chat_message(self, event):
-        message = event['message']
-
-        # 클라이언트에 메시지 전송
-        await self.send(text_data=json.dumps({
-            'message': message
-        }))
 
 class GameRoomConsumer(AsyncWebsocketConsumer):
     async def connect(self):
@@ -73,7 +32,6 @@ class GameRoomConsumer(AsyncWebsocketConsumer):
             if commend=="setting_change":
                 self.room_setting_change(data)
                 return
-            #elif ~~
 
         except Exception as e:
             errorm=repr(e)
@@ -98,6 +56,7 @@ cores:dict[str,ComputerGameHander] = dict()
 async def com(coc:ComputerGameHander)->dict[str,str|int]:
     for _ in range(4):
         bb,n,m = await coc.main(command={'computer':'1'})
+        print(bb,end=" ")
         if not bb:
             continue
         return {
@@ -255,6 +214,7 @@ class GameRoomComputerConsumer(AsyncWebsocketConsumer):
                     )
             if command=="turn_timeout":
                 pw = False if cores[self.room_group_name].player_turn else True
+                rediz.update_score(pw)
                 await self.channel_layer.group_send(
                     self.room_group_name,
                     {
@@ -262,8 +222,22 @@ class GameRoomComputerConsumer(AsyncWebsocketConsumer):
                         'winner':pw
                     }
                 )
+                await self.channel_layer.group_send(
+                    'lobby',
+                    {
+                        'type':"game_load"
+                    }
+                )
                 return
-            
+            if command=="exit":
+                print('aa')
+                rediz.update_score(False)
+                await self.channel_layer.group_send(
+                    'lobby',
+                    {
+                        'type':"game_load"
+                    }
+                )
 
 
         except Exception as e:
@@ -309,6 +283,9 @@ class GameLobbyConsumer(AsyncWebsocketConsumer):
                 )
                 # 클라이언트와의 연결을 허용합니다.
                 await self.accept()
+                uw,cw = rediz.get_scores()
+                print(uw,cw)
+                await self.send(text_data=json.dumps({"type":"game_load", "user_win":uw, "computer_win":cw}))
             else:
                 # 닉네임이 없는 경우 연결을 거부할 수 있습니다.
                 await self.close(4000,reason='Nickname is required to connect to the lobby.')
@@ -441,4 +418,7 @@ class GameLobbyConsumer(AsyncWebsocketConsumer):
             'message':message,
         }))
 
+    async def game_load(self,e):
+        uw,cw = rediz.get_scores()
+        await self.send(text_data=json.dumps({"type":"game_load", "user_win":uw, "computer_win":cw}))
 

@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
 import "./css/WordChainGameUI.css";
 import { useWebSocket } from "./GWebSocketProvider";
-import { useNavigate } from "react-router-dom"; // 페이지 이동을 위한 import
-import VsComputerLobby from "./ComputerGame";
+import { TransitionGroup, CSSTransition } from "react-transition-group";
+
 
 interface wsjson {
     type: string;
@@ -28,14 +28,15 @@ const WordChainGameUI: React.FC = () => {
     const [usedq, setq] = useState<{ word: string; meaning: string }[]>([]);
     const [isError, setIsError] = useState(false);
     const [unsubscribe, setUnsubscribe] = useState<(() => void) | null>(null);
+    const [alltime,setalltime] = useState<number>(30);
 
     useEffect(() => {
         const unsubscribe = subscribe((message) => {
             const j: wsjson = JSON.parse(message);
             console.log("B received message:", j, performance.now());
             if (j.type === "game_start") {
-                setText(j.start_letter as string);
-                setTimeLeft(j.time_limit as number);
+                setText(j.start_letter!);
+                setTimeLeft(j.time_limit!);
                 setBarWidth(100);
                 setTurn(j.player_turn ? true : false);
                 if (!j.player_turn) {
@@ -44,21 +45,27 @@ const WordChainGameUI: React.FC = () => {
                     }, 400);
                 }
             } else if (j.type === "cturn_yes") {
-                setText(j.word as string);
-                setChain(j.chain as number);
+                setText(j.word!);
+                setChain(j.chain!);
                 setq((prev) => {
-                    const updated = [...prev, { word: j.word as string, meaning: j.message as string }];
-                    return updated.slice(-4);
+                    const updated = [...prev, { word: j.word!, meaning: j.message! }];
+                    if (updated.length > 4) {
+                        setTimeout(() => {
+                            setq((prevFinal) => prevFinal.slice(1)); // 나가는 애니메이션 후 실제 제거
+                        }, 300); // 애니메이션 지속 시간 (300ms)와 동일
+                    }
+                    return updated;
                 });
                 setTurn(false);
             } else if (j.type === "cturn_no") {
-                setText(j.word as string);
+                setText(j.word!);
                 setIsError(true);
                 setTurn(false);
             } else if (j.type === "pturn_start") {
                 setTimeout(() => {
-                    setText(j.letter as string);
-                    setTimeLeft(j.time_limit as number);
+                    setText(j.letter!);
+                    setalltime(j.time_limit!)
+                    setTimeLeft(j.time_limit!);
                     setBarWidth(100);
                     setTurn(j.player_turn ? true : false);
                 }, 700);
@@ -67,19 +74,25 @@ const WordChainGameUI: React.FC = () => {
                 setIsError(true);
                 setTimeout(() => {
                     setIsError(false);
-                    setText(j.letter as string);
+                    setText(j.letter!);
                 }, 1000);
             } else if (j.type === "pturn_yes") {
-                setText(j.word as string);
-                setTimeLeft(j.time_limit as number);
+                setText(j.word!);
+                setTimeLeft(j.time_limit!);
+                setChain(j.chain!);
                 setBarWidth(100);
                 setTurn(false);
                 setq((prev) => {
-                    const updated = [...prev, { word: j.word as string, meaning: j.message as string }];
-                    return updated.slice(-4);
+                    const updated = [...prev, { word: j.word!, meaning: j.message! }];
+                    if (updated.length > 4) {
+                        setTimeout(() => {
+                            setq((prevFinal) => prevFinal.slice(1)); // 나가는 애니메이션 후 실제 제거
+                        }, 300); // 애니메이션 지속 시간 (300ms)와 동일
+                    }
+                    return updated;
                 });
                 setTimeout(() => {
-                    setText(j.letter as string);
+                    setText(j.letter!);
                     setTimeout(() => {
                         socket?.send(JSON.stringify({ command: "compin" }));
                     }, 400);
@@ -105,7 +118,7 @@ const WordChainGameUI: React.FC = () => {
     }, [timeLeft, currentTurn]);
 
     useEffect(() => {
-        setBarWidth((timeLeft / 30) * 100);
+        setBarWidth((timeLeft / alltime) * 100);
     }, [timeLeft]);
 
     const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -144,46 +157,48 @@ const WordChainGameUI: React.FC = () => {
             </div>
 
             <div className="recent-words-queue w-full max-w-2xl flex justify-start items-center mt-6 mb-6">
-                {usedq.slice().reverse().map((item, index) => (
-                    <div key={index} className="relative group mr-2">
-                        {/* 단어와 뜻이 표시되는 메인 박스 */}
-                        <div
-                            className="recent-word bg-gray-200 text-gray-800 text-sm font-semibold px-3 py-2 rounded-md text-center"
-                            style={{
-                                maxWidth: "150px", // 가로 길이 늘림
-                                minWidth: "150px",
-                                overflow: "hidden",
-                                textOverflow: "ellipsis",
-                                whiteSpace: "nowrap",
-                            }}
-                        >
-                            <span className="font-bold">
-                                {item.word.length > 10 ? `${item.word.slice(0, 10)}...` : item.word}
-                            </span>
-                            <br />
-                            <span
-                                className="text-xs"
-                                dangerouslySetInnerHTML={{
-                                    __html:
-                                        item.meaning.length > 20
-                                            ? `${item.meaning.slice(0, 20)}...`
-                                            : item.meaning,
-                                }}
-                            />
-                        </div>
-                        {/* 호버 시 상세 정보 */}
-                        <div
-                            className="absolute hidden group-hover:flex flex-col bg-white text-gray-900 border border-gray-400 p-2 rounded-md shadow-lg -top-16 left-0 z-10 max-w-xs word-wrap break-words"
-                            style={{ minWidth: "200px", wordWrap: "break-word" }}
-                        >
-                            <div className="font-bold">{item.word}</div>
-                            <div
-                                className="text-sm"
-                                dangerouslySetInnerHTML={{ __html: item.meaning }}
-                            />
-                        </div>
-                    </div>
-                ))}
+                <TransitionGroup component={null}>
+                    {usedq.slice().reverse().map((item, index) => (
+                        <CSSTransition key={index} timeout={300} classNames="recent-word">
+                            <div className="relative group mr-2">
+                                <div
+                                    className="recent-word bg-gray-200 text-gray-800 text-sm font-semibold px-3 py-2 rounded-md text-center"
+                                    style={{
+                                        maxWidth: "170px",
+                                        minWidth: "170px",
+                                        overflow: "hidden",
+                                        textOverflow: "ellipsis",
+                                        whiteSpace: "nowrap",
+                                    }}
+                                >
+                                    <span className="font-bold">
+                                        {item.word.length > 10 ? `${item.word.slice(0, 10)}...` : item.word}
+                                    </span>
+                                    <br />
+                                    <span
+                                        className="text-xs"
+                                        dangerouslySetInnerHTML={{
+                                            __html:
+                                                item.meaning.length > 20
+                                                    ? `${item.meaning.slice(0, 20)}...`
+                                                    : item.meaning,
+                                        }}
+                                    />
+                                </div>
+                                <div
+                                    className="absolute hidden group-hover:flex flex-col bg-white text-gray-900 border border-gray-400 p-2 rounded-md shadow-lg -top-16 left-0 z-10 max-w-xs word-wrap break-words"
+                                    style={{ minWidth: "200px", wordWrap: "break-word" }}
+                                >
+                                    <div className="font-bold">{item.word}</div>
+                                    <div
+                                        className="text-sm"
+                                        dangerouslySetInnerHTML={{ __html: item.meaning }}
+                                    />
+                                </div>
+                            </div>
+                        </CSSTransition>
+                    ))}
+                </TransitionGroup>
             </div>
 
 

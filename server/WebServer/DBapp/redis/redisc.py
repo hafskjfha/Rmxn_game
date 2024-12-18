@@ -1,9 +1,14 @@
 import redis,dotenv,os
 dotenv.load_dotenv()
 
+USER_WINS_KEY = "user_wins"
+COMPUTER_WINS_KEY = "computer_wins"
+
 class redis_clinet_manager:
     def __init__(self)->None:
         self.redis_client = redis.from_url(os.getenv('redis_setting'))
+        self.redis_client.set(USER_WINS_KEY, 0)
+        self.redis_client.set(COMPUTER_WINS_KEY, 0)
     
     def create_new_room(self):
         max_room_key = "croom:max_number"
@@ -32,3 +37,14 @@ class redis_clinet_manager:
                 return room.decode("utf-8").replace(":",'.')
         # 빈 방이 없으면 새 방 생성
         return self.create_new_room()    
+    
+    def update_score(self,uw:bool)->None:
+        if uw:
+            self.redis_client.incr(USER_WINS_KEY)
+        else:
+            self.redis_client.incr(COMPUTER_WINS_KEY)
+    
+    def get_scores(self)->tuple[int,int]:
+        user_wins = int(self.redis_client.get(USER_WINS_KEY) or 0)
+        computer_wins = int(self.redis_client.get(COMPUTER_WINS_KEY) or 0)
+        return user_wins, computer_wins

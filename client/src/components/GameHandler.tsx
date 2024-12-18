@@ -59,6 +59,8 @@ const GameHandler: React.FC = () => {
     const handleExit = () => {
         if (unsubscribe) {
             console.log("Unsubscribing from WebSocket...");
+            socket?.send(JSON.stringify({command:'exit'}));
+            console.log(socket);
             unsubscribe();
         }
         setp(false); // 로비 화면으로 전환
@@ -68,8 +70,8 @@ const GameHandler: React.FC = () => {
         setShowModal(false);
         setOK(true);
         if (unsubscribe){
-            console.log('Unsubscribing from WebSocket...')
-            unsubscribe()
+            console.log('Unsubscribing from WebSocket...');
+            unsubscribe();
         }
     };
 
